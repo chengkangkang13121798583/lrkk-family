@@ -2,8 +2,8 @@
    LRKK Family - woyaojinbu.xyz
    设计风格：日式简约 · 温暖质感
    配色：暖白 #F5F0EB · 深灰 #2C2C2C
-         胡桃木棕 #8B6914 · 墨绿 #2D5A3D
-         深蓝灰 #3A4A5A
+          胡桃木棕 #8B6914 · 墨绿 #2D5A3D
+          深蓝灰 #3A4A5A
    ============================================ */
 
 /* Reset & Base */
@@ -586,6 +586,13 @@ body {
     font-weight: 300;
 }
 
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .modal-link {
     display: inline-block;
     padding: 12px 28px;
@@ -607,6 +614,26 @@ body {
 
 .modal-link.hidden {
     display: none;
+}
+
+.modal-read-btn {
+    display: inline-block;
+    padding: 12px 28px;
+    background: #8B6914;
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-read-btn:hover {
+    background: #6B4F0F;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 105, 20, 0.25);
 }
 
 @keyframes modalFadeIn {
@@ -649,4 +676,377 @@ body {
 .fade-in.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* ============================================
+   阅读器样式
+   ============================================ */
+
+.reader-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #F5F0EB;
+    z-index: 3000;
+    animation: readerFadeIn 0.3s ease;
+}
+
+.reader-overlay.active {
+    display: flex;
+}
+
+.reader-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #FAF7F2;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.05);
+}
+
+.reader-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: #F5F0EB;
+    border-bottom: 1px solid rgba(139, 105, 20, 0.1);
+    flex-shrink: 0;
+}
+
+.reader-back {
+    background: none;
+    border: 1px solid rgba(139, 105, 20, 0.2);
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    color: #3A4A5A;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.reader-back:hover {
+    background: rgba(139, 105, 20, 0.08);
+    border-color: rgba(139, 105, 20, 0.3);
+}
+
+.reader-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2C2C2C;
+    font-family: 'Inter', sans-serif;
+}
+
+.reader-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.reader-font-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(139, 105, 20, 0.2);
+    border-radius: 50%;
+    background: none;
+    font-size: 0.85rem;
+    color: #3A4A5A;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.reader-font-btn:hover {
+    background: rgba(139, 105, 20, 0.08);
+}
+
+/* 阅读器主体布局 - 左右结构 */
+.reader-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* 目录 */
+.reader-toc {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(139, 105, 20, 0.08);
+    padding: 20px 0;
+    overflow-y: auto;
+    background: #F5F0EB;
+}
+
+.toc-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2C2C2C;
+    padding: 0 20px 12px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 1px;
+}
+
+.toc-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 20px;
+    font-size: 0.82rem;
+    color: #3A4A5A;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent;
+    line-height: 1.4;
+}
+
+.toc-item:hover {
+    background: rgba(139, 105, 20, 0.06);
+    color: #2C2C2C;
+}
+
+.toc-item.active {
+    color: #2D5A3D;
+    border-left-color: #2D5A3D;
+    background: rgba(45, 90, 61, 0.06);
+    font-weight: 500;
+}
+
+/* 阅读主区域 */
+.reader-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 阅读内容区 */
+.reader-content {
+    flex: 1;
+    padding: 40px 48px;
+    overflow-y: auto;
+    line-height: 2;
+    font-size: 1.05rem;
+    color: #2C2C2C;
+}
+
+/* 底部导航栏 */
+.reader-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    background: #F5F0EB;
+    border-top: 1px solid rgba(139, 105, 20, 0.08);
+    flex-shrink: 0;
+}
+
+.reader-nav-btn {
+    padding: 8px 20px;
+    background: none;
+    border: 1px solid rgba(139, 105, 20, 0.2);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    color: #3A4A5A;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.reader-nav-btn:hover {
+    background: rgba(139, 105, 20, 0.08);
+    border-color: rgba(139, 105, 20, 0.3);
+    color: #2C2C2C;
+}
+
+.reader-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.reader-nav-btn:disabled:hover {
+    background: none;
+    border-color: rgba(139, 105, 20, 0.2);
+}
+
+.reader-progress {
+    font-size: 0.8rem;
+    color: #8B6914;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+}
+
+.reader-loading {
+    text-align: center;
+    padding: 60px 0;
+    color: #8B6914;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+}
+
+/* Markdown 渲染样式 */
+.reader-content h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2C2C2C;
+    margin: 40px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(139, 105, 20, 0.12);
+}
+
+.reader-content h2 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #2C2C2C;
+    margin: 32px 0 16px;
+}
+
+.reader-content h3 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #3A4A5A;
+    margin: 24px 0 12px;
+}
+
+.reader-content p {
+    margin-bottom: 16px;
+    text-align: justify;
+}
+
+.reader-content blockquote {
+    border-left: 4px solid #8B6914;
+    padding: 12px 20px;
+    margin: 20px 0;
+    background: rgba(139, 105, 20, 0.04);
+    border-radius: 0 8px 8px 0;
+    color: #3A4A5A;
+    font-style: italic;
+}
+
+.reader-content blockquote p {
+    margin-bottom: 0;
+}
+
+.reader-content ul, .reader-content ol {
+    margin: 12px 0 16px;
+    padding-left: 24px;
+}
+
+.reader-content li {
+    margin-bottom: 8px;
+}
+
+.reader-content strong {
+    font-weight: 600;
+    color: #2C2C2C;
+}
+
+.reader-content em {
+    font-style: italic;
+    color: #3A4A5A;
+}
+
+.reader-content a {
+    color: #2D5A3D;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.reader-content a:hover {
+    color: #1E3D29;
+}
+
+.reader-content code {
+    background: rgba(139, 105, 20, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.reader-content pre {
+    background: #EDE6DC;
+    padding: 20px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 20px 0;
+    border: 1px solid rgba(139, 105, 20, 0.08);
+}
+
+.reader-content pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.85rem;
+}
+
+.reader-content hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139, 105, 20, 0.2), transparent);
+    margin: 32px 0;
+}
+
+.reader-content img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.reader-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.reader-content th, .reader-content td {
+    padding: 10px 16px;
+    border: 1px solid rgba(139, 105, 20, 0.12);
+    text-align: left;
+}
+
+.reader-content th {
+    background: rgba(139, 105, 20, 0.06);
+    font-weight: 600;
+}
+
+/* 字体大小切换 */
+.reader-content.font-lg {
+    font-size: 1.15rem;
+}
+
+.reader-content.font-sm {
+    font-size: 0.95rem;
+}
+
+@keyframes readerFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 阅读器响应式 */
+@media (max-width: 768px) {
+    .reader-toc {
+        display: none;
+    }
+
+    .reader-content {
+        padding: 24px 20px;
+        font-size: 1rem;
+    }
+
+    .reader-header {
+        padding: 12px 16px;
+    }
+
+    .reader-title {
+        font-size: 0.9rem;
+    }
 }

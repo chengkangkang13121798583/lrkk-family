@@ -15,7 +15,25 @@ const books = [
         detail: '李笑来的开源书籍，用通俗易懂的语言讲解定投策略。' 
             + '这不仅是一本关于投资的书，更是一本关于如何通过长期主义思维' 
             + '改变命运的人生指南。书中提出了"定投改变命运"的核心观点，' 
-            + '强调通过持续、长期的投入，在时间的作用下实现财富和人生的复利增长。'
+            + '强调通过持续、长期的投入，在时间的作用下实现财富和人生的复利增长。',
+        // 本地阅读配置
+        localFiles: [
+            { file: 'books/dingtou.md', title: '前言' },
+            { file: 'books/CH1.md', title: '第一章' },
+            { file: 'books/CH2.md', title: '第二章' },
+            { file: 'books/CH3.md', title: '第三章' },
+            { file: 'books/CH4.md', title: '第四章' },
+            { file: 'books/CH5.md', title: '第五章' },
+            { file: 'books/CH6.md', title: '第六章' },
+            { file: 'books/CH7.md', title: '第七章' },
+            { file: 'books/CH8.md', title: '第八章' },
+            { file: 'books/CH9.md', title: '第九章' },
+            { file: 'books/CH10.md', title: '第十章' },
+            { file: 'books/CH11.md', title: '第十一章' },
+            { file: 'books/CH12.md', title: '第十二章' },
+            { file: 'books/CH13.md', title: '第十三章' },
+            { file: 'books/Finale.md', title: '结语' }
+        ]
     },
     {
         emoji: '📖',
@@ -162,7 +180,7 @@ function handleNavbarScroll() {
     });
 }
 
-// ========== 平滑滚动（兼容不支持 scroll-behavior 的浏览器） ==========
+// ========== 平滑滚动 ==========
 function handleSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -187,6 +205,7 @@ function openBookModal(index) {
     const author = document.getElementById('modalAuthor');
     const detail = document.getElementById('modalDetail');
     const link = document.getElementById('modalLink');
+    const readBtn = document.getElementById('modalReadBtn');
 
     emoji.textContent = book.emoji;
     title.textContent = book.title;
@@ -198,6 +217,14 @@ function openBookModal(index) {
         link.classList.remove('hidden');
     } else {
         link.classList.add('hidden');
+    }
+
+    // 如果有本地文件配置，显示"在线阅读"按钮
+    if (book.localFiles && book.localFiles.length > 0) {
+        readBtn.style.display = 'inline-block';
+        readBtn.dataset.index = index;
+    } else {
+        readBtn.style.display = 'none';
     }
 
     modal.classList.add('active');
@@ -223,8 +250,16 @@ function handleBookClicks() {
 function handleModalEvents() {
     const modal = document.getElementById('bookModal');
     const closeBtn = document.getElementById('modalClose');
+    const readBtn = document.getElementById('modalReadBtn');
 
     closeBtn.addEventListener('click', closeBookModal);
+
+    // 点击"在线阅读"按钮打开阅读器
+    readBtn.addEventListener('click', () => {
+        const index = parseInt(readBtn.dataset.index);
+        closeBookModal();
+        setTimeout(() => openReader(index), 300);
+    });
 
     // 点击遮罩层关闭
     modal.addEventListener('click', (e) => {
@@ -241,6 +276,173 @@ function handleModalEvents() {
     });
 }
 
+// ============================================
+// 本地 Markdown 阅读器
+// ============================================
+
+let currentReaderIndex = -1;
+let currentChapterIndex = 0;
+let readerFontSize = 'md'; // 'sm', 'md', 'lg'
+
+function openReader(bookIndex) {
+    const book = books[bookIndex];
+    if (!book.localFiles || book.localFiles.length === 0) return;
+
+    currentReaderIndex = bookIndex;
+    currentChapterIndex = 0;
+
+    const overlay = document.getElementById('readerOverlay');
+    const title = document.getElementById('readerTitle');
+    const content = document.getElementById('readerContent');
+    const tocList = document.getElementById('tocList');
+
+    title.textContent = book.title;
+    
+    // 生成目录
+    tocList.innerHTML = book.localFiles.map((ch, i) => `
+        <button class="toc-item ${i === 0 ? 'active' : ''}" data-chapter="${i}">${ch.title}</button>
+    `).join('');
+
+    // 绑定目录点击事件
+    tocList.querySelectorAll('.toc-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const chapter = parseInt(btn.dataset.chapter);
+            loadChapter(chapter);
+        });
+    });
+
+    // 加载第一章
+    loadChapter(0);
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReader() {
+    const overlay = document.getElementById('readerOverlay');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+    currentReaderIndex = -1;
+}
+
+function loadChapter(chapterIndex) {
+    const book = books[currentReaderIndex];
+    if (!book || !book.localFiles[chapterIndex]) return;
+
+    currentChapterIndex = chapterIndex;
+    const chapter = book.localFiles[chapterIndex];
+    const content = document.getElementById('readerContent');
+    const tocItems = document.querySelectorAll('.toc-item');
+
+    // 更新目录高亮
+    tocItems.forEach((item, i) => {
+        item.classList.toggle('active', i === chapterIndex);
+    });
+
+    // 显示加载状态
+    content.innerHTML = '<div class="reader-loading">📖 加载中...</div>';
+
+    // 使用 fetch 加载本地 Markdown 文件
+    fetch(chapter.file)
+        .then(response => {
+            if (!response.ok) throw new Error('文件加载失败');
+            return response.text();
+        })
+        .then(markdown => {
+            // 使用 marked.js 渲染 Markdown
+            const html = marked.parse(markdown);
+            content.innerHTML = html;
+            // 滚动到顶部
+            content.scrollTop = 0;
+            // 更新导航按钮状态
+            if (window.updateReaderNav) {
+                window.updateReaderNav();
+            }
+        })
+        .catch(error => {
+            content.innerHTML = `
+                <div class="reader-loading">
+                    ⚠️ 文件加载失败<br>
+                    <small>${error.message}</small><br><br>
+                    <small>请确保 books/ 目录下有对应的 Markdown 文件</small>
+                </div>
+            `;
+        });
+}
+
+function handleReaderEvents() {
+    const overlay = document.getElementById('readerOverlay');
+    const backBtn = document.getElementById('readerBack');
+    const fontBtn = document.getElementById('readerFontBtn');
+    const content = document.getElementById('readerContent');
+    const prevBtn = document.getElementById('readerPrevBtn');
+    const nextBtn = document.getElementById('readerNextBtn');
+    const progress = document.getElementById('readerProgress');
+
+    // 返回书架
+    backBtn.addEventListener('click', closeReader);
+
+    // 上一章
+    prevBtn.addEventListener('click', () => {
+        if (currentChapterIndex > 0) {
+            loadChapter(currentChapterIndex - 1);
+        }
+    });
+
+    // 下一章
+    nextBtn.addEventListener('click', () => {
+        const book = books[currentReaderIndex];
+        if (book && book.localFiles && currentChapterIndex < book.localFiles.length - 1) {
+            loadChapter(currentChapterIndex + 1);
+        }
+    });
+
+    // ESC 键关闭
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            closeReader();
+        }
+        // 左右方向键切换章节
+        if (overlay.classList.contains('active')) {
+            const book = books[currentReaderIndex];
+            if (!book || !book.localFiles) return;
+            
+            if (e.key === 'ArrowRight' && currentChapterIndex < book.localFiles.length - 1) {
+                loadChapter(currentChapterIndex + 1);
+            } else if (e.key === 'ArrowLeft' && currentChapterIndex > 0) {
+                loadChapter(currentChapterIndex - 1);
+            }
+        }
+    });
+
+    // 字体大小切换
+    let fontSizeIndex = 0;
+    const fontSizes = ['sm', 'md', 'lg'];
+    fontBtn.addEventListener('click', () => {
+        fontSizeIndex = (fontSizeIndex + 1) % fontSizes.length;
+        const size = fontSizes[fontSizeIndex];
+        content.className = 'reader-content';
+        if (size !== 'md') {
+            content.classList.add('font-' + size);
+        }
+        // 更新按钮文字
+        const labels = { sm: 'A', md: 'Aa', lg: 'A+' };
+        fontBtn.textContent = labels[size];
+    });
+
+    // 将 updateNavButtons 暴露到全局，供 loadChapter 调用
+    window.updateReaderNav = function() {
+        const book = books[currentReaderIndex];
+        if (!book || !book.localFiles) return;
+        const total = book.localFiles.length;
+        const current = currentChapterIndex + 1;
+        progress.textContent = `${current} / ${total}`;
+        prevBtn.disabled = currentChapterIndex === 0;
+        nextBtn.disabled = currentChapterIndex >= total - 1;
+    };
+}
+
+
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
     renderBookshelf();
@@ -249,4 +451,5 @@ document.addEventListener('DOMContentLoaded', () => {
     handleSmoothScroll();
     handleBookClicks();
     handleModalEvents();
+    handleReaderEvents();
 });

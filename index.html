@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- marked.js 用于渲染 Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -128,7 +130,41 @@
                 <h3 class="modal-title" id="modalTitle">书名</h3>
                 <p class="modal-author" id="modalAuthor">作者</p>
                 <p class="modal-detail" id="modalDetail">详情</p>
-                <a class="modal-link" id="modalLink" href="#" target="_blank" rel="noopener">📖 在线阅读开源版本 →</a>
+                <div class="modal-actions">
+                    <a class="modal-link" id="modalLink" href="#" target="_blank" rel="noopener">📖 查看开源仓库 →</a>
+                    <button class="modal-read-btn" id="modalReadBtn" style="display:none;">📖 在线阅读</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 阅读器弹窗 -->
+    <div class="reader-overlay" id="readerOverlay">
+        <div class="reader-container">
+            <div class="reader-header">
+                <button class="reader-back" id="readerBack">← 返回书架</button>
+                <h3 class="reader-title" id="readerTitle">定投改变命运</h3>
+                <div class="reader-controls">
+                    <button class="reader-font-btn" id="readerFontBtn">Aa</button>
+                </div>
+            </div>
+            <div class="reader-body">
+                <div class="reader-toc" id="readerToc">
+                    <div class="toc-title">📑 目录</div>
+                    <div class="toc-list" id="tocList">
+                        <!-- 目录由 JS 动态生成 -->
+                    </div>
+                </div>
+                <div class="reader-main">
+                    <div class="reader-content" id="readerContent">
+                        <div class="reader-loading">📖 加载中...</div>
+                    </div>
+                    <div class="reader-nav">
+                        <button class="reader-nav-btn" id="readerPrevBtn">← 上一章</button>
+                        <span class="reader-progress" id="readerProgress">1 / 15</span>
+                        <button class="reader-nav-btn" id="readerNextBtn">下一章 →</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
