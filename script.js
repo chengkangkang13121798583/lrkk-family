@@ -17,22 +17,22 @@ const books = [
             + '改变命运的人生指南。书中提出了"定投改变命运"的核心观点，' 
             + '强调通过持续、长期的投入，在时间的作用下实现财富和人生的复利增长。',
         // 本地阅读配置
-        localFiles: [
-            { file: 'books/dingtou.md', title: '前言' },
-            { file: 'books/CH1.md', title: '第一章' },
-            { file: 'books/CH2.md', title: '第二章' },
-            { file: 'books/CH3.md', title: '第三章' },
-            { file: 'books/CH4.md', title: '第四章' },
-            { file: 'books/CH5.md', title: '第五章' },
-            { file: 'books/CH6.md', title: '第六章' },
-            { file: 'books/CH7.md', title: '第七章' },
-            { file: 'books/CH8.md', title: '第八章' },
-            { file: 'books/CH9.md', title: '第九章' },
-            { file: 'books/CH10.md', title: '第十章' },
-            { file: 'books/CH11.md', title: '第十一章' },
-            { file: 'books/CH12.md', title: '第十二章' },
-            { file: 'books/CH13.md', title: '第十三章' },
-            { file: 'books/Finale.md', title: '结语' }
+        chapters: [
+            { title: '前言', file: 'books/dingtou.md' },
+            { title: '第一章', file: 'books/CH1.md' },
+            { title: '第二章', file: 'books/CH2.md' },
+            { title: '第三章', file: 'books/CH3.md' },
+            { title: '第四章', file: 'books/CH4.md' },
+            { title: '第五章', file: 'books/CH5.md' },
+            { title: '第六章', file: 'books/CH6.md' },
+            { title: '第七章', file: 'books/CH7.md' },
+            { title: '第八章', file: 'books/CH8.md' },
+            { title: '第九章', file: 'books/CH9.md' },
+            { title: '第十章', file: 'books/CH10.md' },
+            { title: '第十一章', file: 'books/CH11.md' },
+            { title: '第十二章', file: 'books/CH12.md' },
+            { title: '第十三章', file: 'books/CH13.md' },
+            { title: '结语', file: 'books/Finale.md' }
         ]
     },
     {
@@ -155,7 +155,6 @@ function observeElements() {
         rootMargin: '0px 0px -50px 0px'
     });
 
-    // 观察所有需要动画的元素
     document.querySelectorAll('.value-card, .book-card, .about-content').forEach(el => {
         el.classList.add('fade-in');
         observer.observe(el);
@@ -165,18 +164,10 @@ function observeElements() {
 // ========== 导航栏滚动效果 ==========
 function handleNavbarScroll() {
     const navbar = document.querySelector('.navbar');
-    let lastScroll = 0;
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
-        
-        if (currentScroll > 100) {
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.06)';
-        } else {
-            navbar.style.boxShadow = 'none';
-        }
-        
-        lastScroll = currentScroll;
+        navbar.style.boxShadow = currentScroll > 100 ? '0 2px 20px rgba(0, 0, 0, 0.06)' : 'none';
     });
 }
 
@@ -187,10 +178,7 @@ function handleSmoothScroll() {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
             if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
     });
@@ -219,8 +207,8 @@ function openBookModal(index) {
         link.classList.add('hidden');
     }
 
-    // 如果有本地文件配置，显示"在线阅读"按钮
-    if (book.localFiles && book.localFiles.length > 0) {
+    // 如果有 chapters 配置，显示"在线阅读"按钮
+    if (book.chapters && book.chapters.length > 0) {
         readBtn.style.display = 'inline-block';
         readBtn.dataset.index = index;
     } else {
@@ -254,21 +242,16 @@ function handleModalEvents() {
 
     closeBtn.addEventListener('click', closeBookModal);
 
-    // 点击"在线阅读"按钮打开阅读器
     readBtn.addEventListener('click', () => {
         const index = parseInt(readBtn.dataset.index);
         closeBookModal();
         setTimeout(() => openReader(index), 300);
     });
 
-    // 点击遮罩层关闭
     modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeBookModal();
-        }
+        if (e.target === modal) closeBookModal();
     });
 
-    // ESC 键关闭
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeBookModal();
@@ -282,32 +265,39 @@ function handleModalEvents() {
 
 let currentReaderIndex = -1;
 let currentChapterIndex = 0;
-let readerFontSize = 'md'; // 'sm', 'md', 'lg'
+
+// 从内嵌的 bookContent 中获取书籍内容（兼容 file:// 协议，无需网络请求）
+function loadLocalFile(filePath) {
+    // bookContent 是 bookContent.js 中定义的全局变量
+    if (typeof bookContent !== 'undefined' && bookContent[filePath]) {
+        return bookContent[filePath];
+    }
+    console.error('书籍内容未找到:', filePath);
+    return null;
+}
 
 function openReader(bookIndex) {
     const book = books[bookIndex];
-    if (!book.localFiles || book.localFiles.length === 0) return;
+    if (!book.chapters || book.chapters.length === 0) return;
 
     currentReaderIndex = bookIndex;
     currentChapterIndex = 0;
 
     const overlay = document.getElementById('readerOverlay');
     const title = document.getElementById('readerTitle');
-    const content = document.getElementById('readerContent');
     const tocList = document.getElementById('tocList');
 
     title.textContent = book.title;
     
     // 生成目录
-    tocList.innerHTML = book.localFiles.map((ch, i) => `
+    tocList.innerHTML = book.chapters.map((ch, i) => `
         <button class="toc-item ${i === 0 ? 'active' : ''}" data-chapter="${i}">${ch.title}</button>
     `).join('');
 
     // 绑定目录点击事件
     tocList.querySelectorAll('.toc-item').forEach(btn => {
         btn.addEventListener('click', () => {
-            const chapter = parseInt(btn.dataset.chapter);
-            loadChapter(chapter);
+            loadChapter(parseInt(btn.dataset.chapter));
         });
     });
 
@@ -327,10 +317,10 @@ function closeReader() {
 
 function loadChapter(chapterIndex) {
     const book = books[currentReaderIndex];
-    if (!book || !book.localFiles[chapterIndex]) return;
+    if (!book || !book.chapters || !book.chapters[chapterIndex]) return;
 
     currentChapterIndex = chapterIndex;
-    const chapter = book.localFiles[chapterIndex];
+    const chapter = book.chapters[chapterIndex];
     const content = document.getElementById('readerContent');
     const tocItems = document.querySelectorAll('.toc-item');
 
@@ -342,32 +332,28 @@ function loadChapter(chapterIndex) {
     // 显示加载状态
     content.innerHTML = '<div class="reader-loading">📖 加载中...</div>';
 
-    // 使用 fetch 加载本地 Markdown 文件
-    fetch(chapter.file)
-        .then(response => {
-            if (!response.ok) throw new Error('文件加载失败');
-            return response.text();
-        })
-        .then(markdown => {
-            // 使用 marked.js 渲染 Markdown
+    // 使用同步方式加载本地 Markdown 文件
+    setTimeout(() => {
+        const markdown = loadLocalFile(chapter.file);
+        if (markdown !== null) {
             const html = marked.parse(markdown);
             content.innerHTML = html;
-            // 滚动到顶部
             content.scrollTop = 0;
-            // 更新导航按钮状态
-            if (window.updateReaderNav) {
-                window.updateReaderNav();
-            }
-        })
-        .catch(error => {
+        } else {
             content.innerHTML = `
                 <div class="reader-loading">
                     ⚠️ 文件加载失败<br>
-                    <small>${error.message}</small><br><br>
-                    <small>请确保 books/ 目录下有对应的 Markdown 文件</small>
+                    <small>请确保文件存在: ${chapter.file}</small><br><br>
+                    <small>提示：如果通过 file:// 协议打开，部分浏览器可能限制本地文件读取。<br>
+                    建议使用 VS Code 的 Live Server 扩展，或部署到服务器上访问。</small>
                 </div>
             `;
-        });
+        }
+        // 更新导航按钮状态
+        if (window.updateReaderNav) {
+            window.updateReaderNav();
+        }
+    }, 100);
 }
 
 function handleReaderEvents() {
@@ -379,35 +365,27 @@ function handleReaderEvents() {
     const nextBtn = document.getElementById('readerNextBtn');
     const progress = document.getElementById('readerProgress');
 
-    // 返回书架
     backBtn.addEventListener('click', closeReader);
 
-    // 上一章
     prevBtn.addEventListener('click', () => {
-        if (currentChapterIndex > 0) {
-            loadChapter(currentChapterIndex - 1);
-        }
+        if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
     });
 
-    // 下一章
     nextBtn.addEventListener('click', () => {
         const book = books[currentReaderIndex];
-        if (book && book.localFiles && currentChapterIndex < book.localFiles.length - 1) {
+        if (book && book.chapters && currentChapterIndex < book.chapters.length - 1) {
             loadChapter(currentChapterIndex + 1);
         }
     });
 
-    // ESC 键关闭
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && overlay.classList.contains('active')) {
             closeReader();
         }
-        // 左右方向键切换章节
         if (overlay.classList.contains('active')) {
             const book = books[currentReaderIndex];
-            if (!book || !book.localFiles) return;
-            
-            if (e.key === 'ArrowRight' && currentChapterIndex < book.localFiles.length - 1) {
+            if (!book || !book.chapters) return;
+            if (e.key === 'ArrowRight' && currentChapterIndex < book.chapters.length - 1) {
                 loadChapter(currentChapterIndex + 1);
             } else if (e.key === 'ArrowLeft' && currentChapterIndex > 0) {
                 loadChapter(currentChapterIndex - 1);
@@ -422,26 +400,21 @@ function handleReaderEvents() {
         fontSizeIndex = (fontSizeIndex + 1) % fontSizes.length;
         const size = fontSizes[fontSizeIndex];
         content.className = 'reader-content';
-        if (size !== 'md') {
-            content.classList.add('font-' + size);
-        }
-        // 更新按钮文字
+        if (size !== 'md') content.classList.add('font-' + size);
         const labels = { sm: 'A', md: 'Aa', lg: 'A+' };
         fontBtn.textContent = labels[size];
     });
 
-    // 将 updateNavButtons 暴露到全局，供 loadChapter 调用
     window.updateReaderNav = function() {
         const book = books[currentReaderIndex];
-        if (!book || !book.localFiles) return;
-        const total = book.localFiles.length;
+        if (!book || !book.chapters) return;
+        const total = book.chapters.length;
         const current = currentChapterIndex + 1;
         progress.textContent = `${current} / ${total}`;
         prevBtn.disabled = currentChapterIndex === 0;
         nextBtn.disabled = currentChapterIndex >= total - 1;
     };
 }
-
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
