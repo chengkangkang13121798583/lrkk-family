@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🎮 弹球游戏 · LRKK</title>
+    <link rel="stylesheet" href="game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 游戏主容器 -->
+    <div id="gameWrapper">
+        <!-- 顶部 HUD -->
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">分数</span>
+                <span class="hud-value" id="scoreDisplay">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">最高分</span>
+                <span class="hud-value hud-high" id="highScoreDisplay">0</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">生命</span>
+                <span class="hud-value" id="livesDisplay">❤️❤️❤️</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">连击</span>
+                <span class="hud-value hud-combo" id="comboDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- Canvas 游戏区域 -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- 开始/暂停覆盖层 -->
+        <div id="overlay">
+            <div id="overlayContent">
+                <h1 id="overlayTitle">🎮 弹球大作战</h1>
+                <p id="overlaySubtitle">击碎所有砖块，挑战最高分！</p>
+                <div id="overlayControls">
+                    <p>🖱️ 鼠标/触屏移动挡板</p>
+                    <p>⌨️ ← → 方向键控制 · 空格发射/暂停</p>
+                </div>
+                <button id="startBtn">开始游戏</button>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <a href="index.html" id="backBtn" title="返回主页">← 返回</a>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

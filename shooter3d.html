@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>🔫 3D射击生存 · LRKK</title>
+    <link rel="stylesheet" href="shooter3d.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="gameWrapper">
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-item">
+                <span class="hud-label">生命</span>
+                <span class="hud-value" id="healthDisplay">❤️❤️❤️❤️❤️</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">武器</span>
+                <span class="hud-value" id="weaponDisplay">🔫 步枪</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">弹药</span>
+                <span class="hud-value" id="ammoDisplay">30/30</span>
+            </div>
+            <div class="hud-item">
+                <span class="hud-label">击杀</span>
+                <span class="hud-value" id="killDisplay">0</span>
+            </div>
+        </div>
+
+        <!-- 3D渲染容器 -->
+        <div id="gameContainer"></div>
+
+        <!-- 开镜遮罩 -->
+        <div id="scopeOverlay"></div>
+
+        <!-- 覆盖层 -->
+        <div id="overlay">
+            <div id="overlayContent">
+                <h1 id="overlayTitle">🔫 3D射击生存</h1>
+                <p id="overlaySubtitle">第一人称射击 · 消灭所有敌人！</p>
+                <div id="overlayControls">
+                    <p>🖱️ WASD移动 · 鼠标瞄准 · 左键射击</p>
+                    <p>⌨️ 滚轮切换武器 · R换弹 · G手雷</p>
+                    <p>🔫 步枪 · 🎯 狙击(右键开镜) · 🔥 加特林 · 🚀 火箭筒 · 💣 手雷</p>
+                </div>
+                <button id="startBtn">开始游戏</button>
+            </div>
+        </div>
+
+        <a href="index.html" id="backBtn" title="返回主页">← 返回</a>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="shooter3d.js"></script>
+</body>
+</html>
