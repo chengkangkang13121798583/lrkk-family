@@ -11,7 +11,9 @@ const books = [
         author: '李笑来',
         desc: '让时间陪你慢慢变富——普通人也能践行的长期投资策略。',
         tag: '开源书籍',
-        link: 'https://github.com/xiaolai/regular-investing-in-box',
+        link: 'https://ri.firesbox.com/#/cn/',
+        linkText: '📖 在线阅读',
+        repoLink: 'https://github.com/xiaolai/regular-investing-in-box',
         detail: '李笑来的开源书籍，用通俗易懂的语言讲解定投策略。' 
             + '这不仅是一本关于投资的书，更是一本关于如何通过长期主义思维' 
             + '改变命运的人生指南。书中提出了"定投改变命运"的核心观点，' 
@@ -193,6 +195,7 @@ function openBookModal(index) {
     const author = document.getElementById('modalAuthor');
     const detail = document.getElementById('modalDetail');
     const link = document.getElementById('modalLink');
+    const repoLink = document.getElementById('modalRepoLink');
     const readBtn = document.getElementById('modalReadBtn');
 
     emoji.textContent = book.emoji;
@@ -200,15 +203,24 @@ function openBookModal(index) {
     author.textContent = book.author;
     detail.textContent = book.detail;
 
-    // 处理"查看开源仓库"链接
+    // 处理"在线阅读"链接（如果有 linkText 则使用自定义文字）
     if (book.link) {
         link.style.display = 'inline-block';
         link.href = book.link;
+        link.textContent = book.linkText || '📖 在线阅读';
     } else {
         link.style.display = 'none';
     }
 
-    // 如果有 chapters 配置，显示"在线阅读"按钮
+    // 处理"查看开源仓库"链接
+    if (book.repoLink) {
+        repoLink.style.display = 'inline-block';
+        repoLink.href = book.repoLink;
+    } else {
+        repoLink.style.display = 'none';
+    }
+
+    // 如果有 chapters 配置，显示"本地阅读"按钮
     if (book.chapters && book.chapters.length > 0) {
         readBtn.style.display = 'inline-block';
         readBtn.dataset.index = index;
@@ -241,12 +253,23 @@ function handleModalEvents() {
     const closeBtn = document.getElementById('modalClose');
     const readBtn = document.getElementById('modalReadBtn');
     const link = document.getElementById('modalLink');
+    const repoLink = document.getElementById('modalRepoLink');
 
     closeBtn.addEventListener('click', closeBookModal);
 
-    // 点击"查看开源仓库"链接 - 使用 window.open 确保在 file:// 协议下也能打开
+    // 点击"在线阅读"链接 - 使用 window.open 确保在 file:// 协议下也能打开
     link.addEventListener('click', (e) => {
         const href = link.getAttribute('href');
+        if (href && href !== '#') {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(href, '_blank');
+        }
+    });
+
+    // 点击"查看开源仓库"链接
+    repoLink.addEventListener('click', (e) => {
+        const href = repoLink.getAttribute('href');
         if (href && href !== '#') {
             e.preventDefault();
             e.stopPropagation();
