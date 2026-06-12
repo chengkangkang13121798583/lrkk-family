@@ -200,11 +200,12 @@ function openBookModal(index) {
     author.textContent = book.author;
     detail.textContent = book.detail;
 
+    // 处理"查看开源仓库"链接
     if (book.link) {
+        link.style.display = 'inline-block';
         link.href = book.link;
-        link.classList.remove('hidden');
     } else {
-        link.classList.add('hidden');
+        link.style.display = 'none';
     }
 
     // 如果有 chapters 配置，显示"在线阅读"按钮
@@ -239,8 +240,19 @@ function handleModalEvents() {
     const modal = document.getElementById('bookModal');
     const closeBtn = document.getElementById('modalClose');
     const readBtn = document.getElementById('modalReadBtn');
+    const link = document.getElementById('modalLink');
 
     closeBtn.addEventListener('click', closeBookModal);
+
+    // 点击"查看开源仓库"链接 - 使用 window.open 确保在 file:// 协议下也能打开
+    link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (href && href !== '#') {
+            e.preventDefault();
+            e.stopPropagation();
+            window.open(href, '_blank');
+        }
+    });
 
     readBtn.addEventListener('click', () => {
         const index = parseInt(readBtn.dataset.index);
@@ -268,7 +280,6 @@ let currentChapterIndex = 0;
 
 // 从内嵌的 bookContent 中获取书籍内容（兼容 file:// 协议，无需网络请求）
 function loadLocalFile(filePath) {
-    // bookContent 是 bookContent.js 中定义的全局变量
     if (typeof bookContent !== 'undefined' && bookContent[filePath]) {
         return bookContent[filePath];
     }
@@ -332,7 +343,7 @@ function loadChapter(chapterIndex) {
     // 显示加载状态
     content.innerHTML = '<div class="reader-loading">📖 加载中...</div>';
 
-    // 使用同步方式加载本地 Markdown 文件
+    // 从内嵌数据加载 Markdown 内容
     setTimeout(() => {
         const markdown = loadLocalFile(chapter.file);
         if (markdown !== null) {
@@ -342,14 +353,11 @@ function loadChapter(chapterIndex) {
         } else {
             content.innerHTML = `
                 <div class="reader-loading">
-                    ⚠️ 文件加载失败<br>
-                    <small>请确保文件存在: ${chapter.file}</small><br><br>
-                    <small>提示：如果通过 file:// 协议打开，部分浏览器可能限制本地文件读取。<br>
-                    建议使用 VS Code 的 Live Server 扩展，或部署到服务器上访问。</small>
+                    ⚠️ 内容加载失败<br>
+                    <small>请确保 bookContent.js 已正确加载</small>
                 </div>
             `;
         }
-        // 更新导航按钮状态
         if (window.updateReaderNav) {
             window.updateReaderNav();
         }
