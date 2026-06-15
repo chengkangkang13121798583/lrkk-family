@@ -7,10 +7,23 @@
     <meta name="description" content="LRKK 家族 — 持续建设，慢慢变好。建设 · 投资 · 读书 · 陪家人 · 帮朋友">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏡</text></svg>">
     <link rel="stylesheet" href="styles.css">
+    <!-- 赫蹏（heti）中文排版增强 -->
+    <link rel="stylesheet" href="//unpkg.com/heti/umd/heti.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- marked.js 用于渲染 Markdown -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 暗黑模式优先加载，防止闪烁 -->
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('lrkk-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch(e) {}
+        })();
+    </script>
 </head>
 <body>
     <!-- 导航栏 -->
@@ -21,7 +34,7 @@
                 <a href="#bookshelf" class="nav-link">📚 读书架</a>
                 <a href="#values" class="nav-link">价值观</a>
                 <a href="#about" class="nav-link">关于</a>
-
+                <button class="theme-toggle" id="themeToggle" aria-label="切换暗黑模式">🌙</button>
             </div>
         </div>
     </nav>

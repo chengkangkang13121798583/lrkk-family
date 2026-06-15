@@ -1,8 +1,82 @@
 // ============================================
 // LRKK Family - lrkk.love
 // 交互脚本
-
 // ============================================
+
+// ========== 工具函数 ==========
+function safeGet(key, defaultValue) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? defaultValue; }
+    catch(e) { return defaultValue; }
+}
+function safeSet(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); }
+    catch(e) { /* localStorage 不可用 */ }
+}
+
+// ========== 暗黑模式 ==========
+function initTheme() {
+    const toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    toggle.textContent = isDark ? '☀️' : '🌙';
+    toggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next === 'dark' ? 'dark' : '');
+        toggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        safeSet('lrkk-theme', next);
+    });
+}
+
+// ========== 阅读进度管理 ==========
+function saveReadingProgress(bookIndex, chapterIndex) {
+    const book = books[bookIndex];
+    if (!book || !book.chapters) return;
+    const progress = safeGet('lrkk-reading-progress', {});
+    progress[bookIndex] = {
+        chapter: chapterIndex,
+        total: book.chapters.length,
+        lastRead: new Date().toISOString().split('T')[0]
+    };
+    safeSet('lrkk-reading-progress', progress);
+    // 更新阅读统计
+    updateReadingStats();
+}
+
+function loadReadingProgress(bookIndex) {
+    const progress = safeGet('lrkk-reading-progress', {});
+    return progress[bookIndex] || null;
+}
+
+function getBookProgressText(bookIndex) {
+    const p = loadReadingProgress(bookIndex);
+    if (!p) return '';
+    return `📖 ${p.chapter + 1}/${p.total}章`;
+}
+
+// ========== 阅读统计 ==========
+function updateReadingStats() {
+    const progress = safeGet('lrkk-reading-progress', {});
+    let totalChapters = 0;
+    let totalBooks = 0;
+    const dates = new Set();
+    Object.values(progress).forEach(p => {
+        totalChapters += p.chapter + 1;
+        totalBooks++;
+        if (p.lastRead) dates.add(p.lastRead);
+    });
+    // 计算连续阅读天数
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().split('T')[0];
+        if (dates.has(key)) streak++;
+        else if (i > 0) break;
+    }
+    return { totalBooks, totalChapters, days: dates.size, streak };
+}
 
 // ========== 书架数据 ==========
 const books = [
@@ -316,7 +390,6 @@ function openReader(bookIndex) {
     if (!book.chapters || book.chapters.length === 0) return;
 
     currentReaderIndex = bookIndex;
-    currentChapterIndex = 0;
 
     const overlay = document.getElementById('readerOverlay');
     const title = document.getElementById('readerTitle');
@@ -326,7 +399,7 @@ function openReader(bookIndex) {
     
     // 生成目录
     tocList.innerHTML = book.chapters.map((ch, i) => `
-        <button class="toc-item ${i === 0 ? 'active' : ''}" data-chapter="${i}">${ch.title}</button>
+        <button class="toc-item" data-chapter="${i}">${ch.title}</button>
     `).join('');
 
     // 绑定目录点击事件
@@ -336,8 +409,13 @@ function openReader(bookIndex) {
         });
     });
 
-    // 加载第一章
-    loadChapter(0);
+    // 恢复阅读进度
+    const saved = loadReadingProgress(bookIndex);
+    const startChapter = saved ? saved.chapter : 0;
+    currentChapterIndex = startChapter;
+
+    // 加载上次阅读的章节
+    loadChapter(startChapter);
 
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -373,7 +451,11 @@ function loadChapter(chapterIndex) {
         if (markdown !== null) {
             const html = marked.parse(markdown);
             content.innerHTML = html;
+            // 添加 heti 中文排版增强
+            content.classList.add('heti');
             content.scrollTop = 0;
+            // 保存阅读进度
+            saveReadingProgress(currentReaderIndex, chapterIndex);
         } else {
             content.innerHTML = `
                 <div class="reader-loading">
@@ -450,6 +532,7 @@ function handleReaderEvents() {
 
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     renderBookshelf();
     observeElements();
     handleNavbarScroll();
