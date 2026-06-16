@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>书架库 · LRKK</title>
+    <meta name="description" content="LRKK 书架库 — 阅读中的书籍">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('lrkk-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else if (theme === 'eye') {
+                    document.documentElement.setAttribute('data-theme', 'eye');
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <style>
+        /* 书架库页面专用样式 */
+        .bookshelf-page {
+            padding-top: calc(var(--nav-height) + 40px);
+            min-height: 100vh;
+        }
+
+        .bookshelf-page .section-heading {
+            margin-bottom: 8px;
+        }
+
+        .bookshelf-page-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-family: var(--font-sans);
+        }
+
+        .bookshelf-page .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-sans);
+            transition: color 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .bookshelf-page .back-link:hover {
+            color: var(--accent);
+        }
+
+        /* 搜索框 */
+        .bookshelf-search-wrap {
+            margin-bottom: 24px;
+        }
+
+        .bookshelf-search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: var(--card-bg);
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .bookshelf-search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .bookshelf-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .bookshelf-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .bookshelf-search-relative {
+            position: relative;
+        }
+
+        .bookshelf-search-count {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            margin-top: 8px;
+        }
+
+        /* 搜索结果高亮 */
+        .bookshelf-highlight {
+            background: #ffd54f;
+            color: #000;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .bookshelf-highlight {
+            background: #b8860b;
+            color: #fff;
+        }
+
+        /* 书籍卡片网格 */
+        .bookshelf-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .bookshelf-grid .book-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .bookshelf-grid .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--accent);
+        }
+
+        /* 书籍封面区域 */
+        .bookshelf-grid .book-card-cover {
+            width: 100%;
+            aspect-ratio: 3/4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .bookshelf-grid .book-card-cover svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .bookshelf-grid .book-card-body {
+            padding: 16px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .bookshelf-grid .book-card-title {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .bookshelf-grid .book-card-author {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+        }
+
+        .bookshelf-grid .book-card-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 100px;
+            font-size: 0.65rem;
+            font-family: var(--font-sans);
+            align-self: flex-start;
+        }
+
+        .bookshelf-grid .book-card-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            flex: 1;
+        }
+
+        .bookshelf-grid .book-card-progress {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            margin-top: auto;
+        }
+
+        .bookshelf-grid .book-card-progress-bar {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .bookshelf-grid .book-card-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .bookshelf-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+
+        .bookshelf-empty-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        /* ========== 搜索开源书籍区域 ========== */
+        .open-search-section {
+            margin-top: 48px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+
+        .open-search-section .section-label {
+            margin-bottom: 16px;
+        }
+
+        .open-search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .open-search-bar .bookshelf-search-input {
+            flex: 1;
+        }
+
+        .open-search-btn {
+            padding: 10px 24px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .open-search-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .open-search-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 数据源标签筛选 */
+        .open-source-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tag-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-family: var(--font-sans);
+            color: var(--text-secondary);
+            background: var(--card-bg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .tag-btn.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .tag-btn .src-icon {
+            font-size: 0.85rem;
+        }
+
+        /* 搜索结果 */
+        .open-search-results {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 60px;
+        }
+
+        .open-search-status {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .open-search-status .status-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .open-search-error {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+
+        .open-result-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px 22px;
+            transition: all 0.25s ease;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .open-result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--accent);
+        }
+
+        .open-result-cover {
+            width: 70px;
+            height: 100px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            background: var(--bg-alt);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            overflow: hidden;
+        }
+
+        .open-result-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .open-result-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .open-result-title {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .open-result-author {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            margin-bottom: 4px;
+        }
+
+        .open-result-desc {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .open-result-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .open-result-source {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 100px;
+            font-size: 0.6rem;
+            font-family: var(--font-sans);
+            font-weight: 500;
+        }
+
+        .open-result-stars {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+        }
+
+        .open-result-rating {
+            font-size: 0.7rem;
+            color: #f5a623;
+            font-family: var(--font-sans);
+        }
+
+        .open-result-links {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .open-result-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+        }
+
+        .open-result-link:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .open-result-link.primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        .open-result-link.primary:hover {
+            background: var(--accent-hover);
+        }
+
+        @media (max-width: 900px) {
+            .bookshelf-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .open-search-bar {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .bookshelf-grid {
+                grid-template-columns: 1fr;
+            }
+            .open-result-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .open-result-cover {
+                width: 100%;
+                height: 160px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== 导航栏 ========== -->
+<nav class="navbar">
+    <div class="nav-inner">
+        <div class="nav-left">
+            <a href="index.html" class="nav-logo">LRKK</a>
+            <span class="nav-divider">/</span>
+            <span class="nav-user">书架库</span>
+        </div>
+        <div class="nav-center" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="index.html#articles" class="nav-link">Articles</a>
+            <a href="index.html#books" class="nav-link">Books</a>
+            <a href="index.html#about" class="nav-link">About</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🖥</button>
+        </div>
+        <button class="nav-hamburger" id="navHamburger" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- ========== 书架库主内容 ========== -->
+<section class="section bookshelf-page">
+    <div class="section-inner">
+        <a href="index.html#books" class="back-link">← 返回主页</a>
+        
+        <div class="section-label">§ BOOKS</div>
+        <h2 class="section-heading" style="margin-bottom:0;"><em>书架库</em></h2>
+        <p class="bookshelf-page-subtitle">共 <span id="bookshelfCount">0</span> 本书 · 持续阅读中</p>
+
+        <div class="bookshelf-search-wrap">
+            <div class="bookshelf-search-relative">
+                <span class="bookshelf-search-icon">🔍</span>
+                <input type="text" class="bookshelf-search-input" id="bookshelfSearchInput" placeholder="搜索书名、作者、标签..." autocomplete="off">
+            </div>
+            <div class="bookshelf-search-count" id="bookshelfSearchCount"></div>
+        </div>
+
+        <div class="bookshelf-grid" id="bookshelfGrid">
+            <!-- 由 JS 动态生成 -->
+        </div>
+
+        <!-- ========== 搜索开源书籍区域 ========== -->
+        <div class="open-search-section">
+            <div class="section-label">🔍 SEARCH OPEN BOOKS</div>
+            <h2 class="section-heading" style="margin-bottom:16px;"><em>搜索开源书籍</em> — 微信读书 · GitHub · 古登堡 · 豆瓣 · Open Library</h2>
+            
+            <div class="open-search-bar">
+                <div class="bookshelf-search-relative" style="flex:1;">
+                    <span class="bookshelf-search-icon">🔍</span>
+                    <input type="text" class="bookshelf-search-input" id="openSearchInput" placeholder="输入书名或作者，搜索全网开源书籍..." autocomplete="off">
+                </div>
+                <button class="open-search-btn" id="openSearchBtn">搜索</button>
+            </div>
+
+            <div class="open-source-tags" id="openSourceTags">
+                <button class="tag-btn active" data-source="all"><span class="src-icon">🌐</span> 全部</button>
+                <button class="tag-btn" data-source="weread"><span class="src-icon">📱</span> 微信读书</button>
+                <button class="tag-btn" data-source="github"><span class="src-icon">💻</span> GitHub</button>
+                <button class="tag-btn" data-source="gutenberg"><span class="src-icon">📜</span> 古登堡</button>
+                <button class="tag-btn" data-source="douban"><span class="src-icon">📖</span> 豆瓣</button>
+                <button class="tag-btn" data-source="openlibrary"><span class="src-icon">🌍</span> Open Library</button>
+            </div>
+
+            <div class="open-search-results" id="openSearchResults">
+                <div class="open-search-status">
+                    <span class="status-icon">🔍</span>
+                    输入书名或作者，点击搜索<br>
+                    <small style="color:var(--text-muted);font-size:0.8rem;">支持微信读书 · GitHub开源 · 古登堡计划 · 豆瓣 · Open Library</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== 书籍详情弹窗（复用主站弹窗） ========== -->
+<div class="modal-overlay" id="bookModal">
+    <div class="modal-content">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-body">
+            <span class="modal-emoji" id="modalEmoji">📖</span>
+            <h3 class="modal-title" id="modalTitle">书名</h3>
+            <p class="modal-author" id="modalAuthor">作者</p>
+            <p class="modal-detail" id="modalDetail">详情</p>
+            <div class="modal-actions">
+                <a class="modal-link" id="modalLink" href="#" target="_blank" rel="noopener">📖 在线阅读</a>
+                <a class="modal-link modal-repo-link" id="modalRepoLink" href="#" target="_blank" rel="noopener" style="display:none;">📂 查看开源仓库</a>
+                <button class="modal-read-btn" id="modalReadBtn" style="display:none;">📖 本地阅读</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 阅读器弹窗 -->
+<div class="reader-overlay" id="readerOverlay">
+    <div class="reader-container">
+        <div class="reader-header">
+            <button class="reader-back" id="readerBack">← 返回书架</button>
+            <h3 class="reader-title" id="readerTitle">定投改变命运</h3>
+            <div class="reader-controls">
+                <button class="reader-info-btn" id="readerInfoBtn" title="书籍信息">📋</button>
+                <button class="reader-font-btn" id="readerFontBtn">Aa</button>
+            </div>
+        </div>
+        <div class="reader-body">
+            <div class="reader-toc" id="readerToc">
+                <div class="toc-title">📑 目录</div>
+                <div class="toc-list" id="tocList"></div>
+            </div>
+            <div class="reader-main">
+                <div class="reader-content" id="readerContent">
+                    <div class="reader-loading">📖 加载中...</div>
+                </div>
+                <div class="reader-nav">
+                    <button class="reader-nav-btn" id="readerPrevBtn">← 上一章</button>
+                    <span class="reader-progress" id="readerProgress">1 / 15</span>
+                    <button class="reader-nav-btn" id="readerNextBtn">下一章 →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="bookContent.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -60,6 +60,38 @@
     border-color: rgba(255,255,255,0.08);
 }
 
+/* ========== 护眼模式 ========== */
+[data-theme="eye"] {
+    --bg: #f5f0e8;
+    --bg-alt: #efe8dc;
+    --text: #3d3a36;
+    --text-secondary: #6b655a;
+    --text-muted: #9e9588;
+    --accent: #8b6914;
+    --accent-light: rgba(139, 105, 20, 0.1);
+    --accent-hover: #a07d1a;
+    --border: rgba(61, 58, 54, 0.1);
+    --border-light: rgba(61, 58, 54, 0.05);
+    --card-bg: #faf5ec;
+    --card-shadow: 0 1px 3px rgba(61, 58, 54, 0.06);
+    --card-shadow-hover: 0 8px 24px rgba(61, 58, 54, 0.08);
+    --dot-bg: radial-gradient(circle, rgba(139, 105, 20, 0.04) 1px, transparent 1px);
+}
+
+[data-theme="eye"] .navbar {
+    background: rgba(245, 240, 232, 0.92);
+}
+
+[data-theme="eye"] .reader-content img { opacity: 0.9; }
+[data-theme="eye"] .reader-content code {
+    background: #e8e0d4;
+    color: #3d3a36;
+}
+[data-theme="eye"] .reader-content pre {
+    background: #efe8dc;
+    border-color: rgba(61, 58, 54, 0.08);
+}
+
 /* ========== Reset & Base ========== */
 *, *::before, *::after {
     margin: 0;
@@ -361,6 +393,120 @@ a {
     color: var(--text-muted);
     text-align: right;
     font-family: var(--font-sans);
+}
+
+/* ========== 人生价值观标签栏 ========== */
+.values-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 28px 12px;
+    flex-wrap: wrap;
+}
+
+.value-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    animation: value-breathe 3s ease-in-out infinite;
+    opacity: 0.5;
+    border: 1px solid transparent;
+}
+
+.value-tag:nth-child(1) { animation-delay: 0s; }
+.value-tag:nth-child(2) { animation-delay: 0.4s; }
+.value-tag:nth-child(3) { animation-delay: 0.8s; }
+.value-tag:nth-child(4) { animation-delay: 1.2s; }
+.value-tag:nth-child(5) { animation-delay: 1.6s; }
+
+.value-tag:hover {
+    opacity: 1;
+    animation: none;
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-2px);
+}
+
+@keyframes value-breathe {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* ========== 跑马灯 ========== */
+.marquee-wrapper {
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg-alt);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    position: relative;
+}
+
+.marquee-wrapper::before,
+.marquee-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.marquee-wrapper::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-alt), transparent);
+}
+
+.marquee-wrapper::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-alt), transparent);
+}
+
+.marquee-track {
+    display: flex;
+    white-space: nowrap;
+    animation: marquee-scroll 30s linear infinite;
+    will-change: transform;
+}
+
+.marquee-wrapper:hover .marquee-track {
+    animation-play-state: paused;
+}
+
+.marquee-content {
+    display: inline-block;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    padding: 0 40px;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+}
+
+@keyframes marquee-scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 /* ========== Section 通用 ========== */
@@ -674,7 +820,43 @@ a {
     transform: translateY(-1px);
 }
 
-.decisions-timeline {
+/* 主决策列表 - 无高度限制，显示全部 */
+#decisions .decisions-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 查看全部决策按钮 */
+.decisions-view-all-wrap {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.decisions-view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 28px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    background: var(--card-bg);
+}
+
+.decisions-view-all-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-1px);
+}
+
+/* About 区域的决策列表 - 限制高度 */
+#about .decisions-timeline {
     display: flex;
     flex-direction: column;
     gap: 10px;

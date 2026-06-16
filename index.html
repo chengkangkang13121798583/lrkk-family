@@ -16,6 +16,8 @@
                 var theme = localStorage.getItem('lrkk-theme');
                 if (theme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
+                } else if (theme === 'eye') {
+                    document.documentElement.setAttribute('data-theme', 'eye');
                 }
             } catch(e) {}
         })();
@@ -35,7 +37,8 @@
         <div class="nav-center" id="navLinks">
             <a href="#articles" class="nav-link">Articles</a>
             <a href="#books" class="nav-link">Books</a>
-            <a href="#about" class="nav-link">About</a>
+            <a href="#decisions" class="nav-link">Decisions</a>
+            <a href="#guestbook" class="nav-link">Guestbook</a>
         </div>
 
         <div class="nav-right">
@@ -102,6 +105,27 @@
     </div>
 </section>
 
+<!-- ========== 人生价值观 ========== -->
+<div class="values-bar">
+    <a href="values.html?value=fitness" class="value-tag" data-value="fitness">🏋️ 健身</a>
+    <a href="values.html?value=reading" class="value-tag" data-value="reading">📖 读书</a>
+    <a href="values.html?value=invest" class="value-tag" data-value="invest">💰 投资</a>
+    <a href="values.html?value=family" class="value-tag" data-value="family">👨‍👩‍👧‍👦 陪家人</a>
+    <a href="values.html?value=friend" class="value-tag" data-value="friend">🤝 帮朋友</a>
+</div>
+
+<!-- ========== 跑马灯 ========== -->
+<div class="marquee-wrapper">
+    <div class="marquee-track" id="marqueeTrack">
+        <span class="marquee-content">
+            LRKK 取自两位创始者的名字缩写。我们相信：人生最重要的五件事——建设自己、投资未来、读书明理、陪伴家人、帮助朋友。这是一个持续进化的个人网站，记录我们的思考、阅读与成长。
+        </span>
+        <span class="marquee-content">
+            LRKK 取自两位创始者的名字缩写。我们相信：人生最重要的五件事——建设自己、投资未来、读书明理、陪伴家人、帮助朋友。这是一个持续进化的个人网站，记录我们的思考、阅读与成长。
+        </span>
+    </div>
+</div>
+
 <!-- ========== § 01 · ARTICLES ========== -->
 <section id="articles" class="section">
     <div class="section-inner">
@@ -127,7 +151,7 @@
     <div class="section-inner">
         <div class="section-top">
             <div class="section-label">§ 02 · BOOKS</div>
-            <a href="#" class="section-all">ALL →</a>
+            <a href="bookshelf.html" class="section-all">ALL →</a>
         </div>
         <h2 class="section-heading"><em>The shelf</em> — <span id="bookCount">8</span> volumes, in rotation</h2>
         <div class="bookshelf-wrap">
@@ -138,45 +162,27 @@
     </div>
 </section>
 
-<!-- ========== § 03 · ABOUT ========== -->
+<!-- ========== § 03 · DECISIONS ========== -->
 
-<section id="about" class="section section-alt">
+<section id="decisions" class="section">
     <div class="section-inner">
         <div class="section-top">
-            <div class="section-label">§ 03 · ABOUT</div>
-
+            <div class="section-label">§ 03 · DECISIONS</div>
+            <button class="decision-add-btn" id="decisionAddBtn">+ 新增</button>
         </div>
-        <h2 class="section-heading"><em>About</em> — LRKK Family</h2>
-        <div class="about-grid">
-            <div class="about-text">
-                <p>LRKK 取自两位创始者的名字缩写。我们相信：人生最重要的五件事——建设自己、投资未来、读书明理、陪伴家人、帮助朋友。</p>
-                <p>这是一个持续进化的个人网站，记录我们的思考、阅读与成长。</p>
-                <div class="about-values">
-                    <span class="about-tag">建设</span>
-                    <span class="about-tag">投资</span>
-                    <span class="about-tag">读书</span>
-                    <span class="about-tag">陪家人</span>
-                    <span class="about-tag">帮朋友</span>
-                </div>
-            </div>
-            <div class="about-side">
-                <!-- 决策记录 -->
-                <div class="decisions-mini">
-                    <div class="decisions-toolbar">
-                        <span class="decisions-mini-title">📋 决策记录</span>
-                        <button class="decision-add-btn" id="decisionAddBtn">+ 新增</button>
-                    </div>
-                    <div class="decisions-timeline" id="decisionsContainer">
-                        <!-- 由 JS 动态生成 -->
-                    </div>
-                </div>
-            </div>
+        <h2 class="section-heading"><em>Decisions</em> — <span id="decisionCount">共 0 条决策</span></h2>
+        <div class="decisions-timeline" id="decisionsContainer">
+            <!-- 由 JS 动态生成最近3条 -->
+        </div>
+        <div class="decisions-view-all-wrap">
+            <a href="decisions.html" class="decisions-view-all-btn">📋 查看全部决策 →</a>
         </div>
     </div>
 </section>
 
+
 <!-- ========== 留言板 ========== -->
-<section class="section">
+<section id="guestbook" class="section">
     <div class="section-inner">
         <div class="section-top">
             <div class="section-label">§ 04 · GUESTBOOK</div>
@@ -214,7 +220,7 @@
             <div class="footer-col">
                 <h4 class="footer-col-title">LEARN</h4>
                 <a href="#about" class="footer-link">About</a>
-                <a href="#" class="footer-link">决策记录</a>
+                <a href="#decisions" class="footer-link">决策记录</a>
                 <a href="#" class="footer-link">留言板</a>
             </div>
             <div class="footer-col">

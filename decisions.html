@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>决策记录 · LRKK</title>
+    <meta name="description" content="LRKK 决策记录库 — 记录每一个重要决策">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('lrkk-theme');
+                if (theme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                } else if (theme === 'eye') {
+                    document.documentElement.setAttribute('data-theme', 'eye');
+                }
+            } catch(e) {}
+        })();
+    </script>
+    <style>
+        /* 决策库页面专用样式 */
+        .decisions-page {
+            padding-top: calc(var(--nav-height) + 40px);
+            min-height: 100vh;
+        }
+
+        .decisions-page .section-heading {
+            margin-bottom: 8px;
+        }
+
+        .decisions-page-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-family: var(--font-sans);
+        }
+
+        .decisions-page .decisions-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .decisions-page .decision-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .decisions-page .decision-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+            border-color: var(--accent);
+        }
+
+        .decisions-page .decision-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .decisions-page .decision-card-title {
+            font-family: var(--font-serif);
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .decisions-page .decision-card-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            white-space: nowrap;
+            margin-left: 16px;
+            margin-top: 2px;
+        }
+
+        .decisions-page .decision-card-reason,
+        .decisions-page .decision-card-effect {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 4px;
+        }
+
+        .decisions-page .decision-card-effect {
+            color: var(--accent);
+        }
+
+        .decisions-page .decision-card-improvements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .decisions-page .decision-improvement-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            background: var(--accent-light);
+            color: var(--accent);
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-family: var(--font-sans);
+        }
+
+        .decisions-page .decision-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .decisions-page .decision-card-btn {
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+        }
+
+        .decisions-page .decision-card-btn:hover {
+            background: var(--accent-light);
+            color: var(--text);
+            border-color: var(--accent);
+        }
+
+        .decisions-page .decision-card-btn.delete:hover {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .decisions-page .decision-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .decisions-page .decision-empty-icon {
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .decisions-page .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-sans);
+            transition: color 0.2s ease;
+            margin-bottom: 20px;
+        }
+
+        .decisions-page .back-link:hover {
+            color: var(--accent);
+        }
+
+        /* 决策库页面顶部操作栏 */
+        .decisions-page-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .decisions-page-top .decision-add-btn {
+            padding: 8px 20px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .decisions-page-top .decision-add-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* 搜索框 */
+        .decision-search-wrap {
+            margin-bottom: 20px;
+        }
+
+        .decision-search-input {
+            width: 100%;
+            padding: 10px 16px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: var(--card-bg);
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .decision-search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .decision-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .decision-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .decision-search-relative {
+            position: relative;
+        }
+
+        /* 搜索结果高亮 */
+        .decision-highlight {
+            background: #ffd54f;
+            color: #000;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .decision-highlight {
+            background: #b8860b;
+            color: #fff;
+        }
+
+        .decision-search-count {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== 导航栏 ========== -->
+<nav class="navbar">
+    <div class="nav-inner">
+        <div class="nav-left">
+            <a href="index.html" class="nav-logo">LRKK</a>
+            <span class="nav-divider">/</span>
+            <span class="nav-user">决策记录库</span>
+        </div>
+        <div class="nav-center" id="navLinks">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="index.html#articles" class="nav-link">Articles</a>
+            <a href="index.html#books" class="nav-link">Books</a>
+            <a href="index.html#about" class="nav-link">About</a>
+        </div>
+        <div class="nav-right">
+            <button class="theme-toggle" id="themeToggle" aria-label="切换主题">🖥</button>
+        </div>
+        <button class="nav-hamburger" id="navHamburger" aria-label="菜单">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- ========== 决策库主内容 ========== -->
+<section class="section decisions-page">
+    <div class="section-inner">
+        <a href="index.html#decisions" class="back-link">← 返回主页</a>
+        
+        <div class="decisions-page-top">
+            <div>
+                <div class="section-label">§ DECISIONS</div>
+                <h2 class="section-heading" style="margin-bottom:0;"><em>决策记录库</em></h2>
+                <p class="decisions-page-subtitle">共 <span id="decisionCount">0</span> 条决策 · 按添加时间倒序排列</p>
+            </div>
+            <button class="decision-add-btn" id="decisionAddBtn">+ 新增决策</button>
+        </div>
+
+        <div class="decision-search-wrap">
+            <div class="decision-search-relative">
+                <span class="decision-search-icon">🔍</span>
+                <input type="text" class="decision-search-input" id="decisionSearchInput" placeholder="搜索决策标题、原因、效果..." autocomplete="off">
+            </div>
+            <div class="decision-search-count" id="decisionSearchCount"></div>
+        </div>
+
+        <div class="decisions-timeline" id="decisionsContainer">
+            <!-- 由 JS 动态生成 -->
+        </div>
+    </div>
+</section>
+
+<!-- ========== 决策详情弹窗 ========== -->
+<div class="decision-modal-overlay" id="decisionModal">
+    <div class="decision-modal-content">
+        <button class="decision-modal-close" id="decisionModalClose">&times;</button>
+        <div class="decision-modal-body" id="decisionModalBody"></div>
+    </div>
+</div>
+
+<!-- 决策表单弹窗 -->
+<div class="decision-modal-overlay" id="decisionFormModal">
+    <div class="decision-modal-content">
+        <button class="decision-modal-close" id="decisionFormClose">&times;</button>
+        <div class="decision-modal-body">
+            <h3 class="decision-form-title" id="decisionFormTitle">新增决策</h3>
+            <input type="hidden" id="decisionFormEditId" value="">
+            <div class="decision-form-group">
+                <label class="decision-form-label">📌 决策标题</label>
+                <input type="text" id="decisionFormTitleInput" class="decision-form-input" placeholder="输入决策标题">
+            </div>
+            <div class="decision-form-group">
+                <label class="decision-form-label">📝 决策产生原因</label>
+                <textarea id="decisionFormReason" class="decision-form-textarea" placeholder="为什么要做这个决策？"></textarea>
+            </div>
+            <div class="decision-form-group">
+                <label class="decision-form-label">🎯 期望的效果</label>
+                <textarea id="decisionFormEffect" class="decision-form-textarea" placeholder="希望达到什么目标？"></textarea>
+            </div>
+            <div class="decision-form-group">
+                <label class="decision-form-label">🔒 密码验证</label>
+                <input type="password" id="decisionFormPassword" class="decision-form-input" placeholder="输入管理密码">
+            </div>
+            <div class="decision-form-actions">
+                <button class="decision-btn" id="decisionFormSave">💾 保存</button>
+                <button class="decision-btn decision-btn-secondary" id="decisionFormCancel">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 密码验证弹窗 -->
+<div class="decision-modal-overlay" id="decisionPasswordModal">
+    <div class="decision-modal-content" style="max-width:360px;">
+        <button class="decision-modal-close" id="decisionPasswordClose">&times;</button>
+        <div class="decision-modal-body" style="text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:12px;">🔒</div>
+            <h3 style="font-family:Georgia,'Noto Serif SC',serif;font-size:1.1rem;font-weight:500;color:var(--text);margin-bottom:16px;">请输入管理密码</h3>
+            <input type="password" id="decisionPasswordInput" class="decision-form-input" placeholder="输入密码" style="margin-bottom:16px;">
+            <div style="display:flex;gap:8px;justify-content:center;">
+                <button class="decision-btn" id="decisionPasswordConfirm">确认</button>
+                <button class="decision-btn decision-btn-secondary" id="decisionPasswordCancel">取消</button>
+            </div>
+            <p class="decision-password-error" id="decisionPasswordError" style="display:none;color:#8b0000;font-size:0.8rem;margin-top:8px;">❌ 密码错误，请重试</p>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
