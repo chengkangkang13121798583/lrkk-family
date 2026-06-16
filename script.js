@@ -182,12 +182,15 @@ const books = [
         author: 'Ray Dalio',
         desc: '桥水基金创始人的生活与工作原则，用系统化思维做决策。',
         tag: '思维方法',
-        link: '',
+        link: 'https://www.principles.com/',
+        linkText: '🌐 官方在线阅读',
         detail: '桥水基金创始人 Ray Dalio 总结的生活和工作原则。' 
             + '他相信，通过建立一套系统化的原则，' 
             + '我们可以更有效地应对生活中的各种挑战。' 
             + '这本书分为"生活原则"和"工作原则"两部分，' 
             + '提供了极具实操性的决策框架。'
+            + '\n\n📖 官方中文版在线阅读：https://www.principles.com/'
+            + '\n支持中文、英文等多语言切换。'
     },
     {
         emoji: '🎯',
@@ -203,20 +206,64 @@ const books = [
     }
 ];
 
-// ========== 渲染书架 ==========
+// ========== 渲染书架（书脊形式） ==========
 function renderBookshelf() {
     const container = document.getElementById('bookshelfContainer');
     if (!container) return;
 
-    container.innerHTML = books.map((book, index) => `
-        <div class="book-card" data-index="${index}">
-            <span class="book-emoji">${book.emoji}</span>
-            <h3 class="book-title">${book.title}</h3>
-            <p class="book-author">${book.author}</p>
-            <p class="book-desc">${book.desc}</p>
-            <span class="book-tag">${book.tag}</span>
-        </div>
-    `).join('');
+    container.innerHTML = books.map((book, index) => {
+        const progress = loadReadingProgress(index);
+        const progressPercent = progress ? Math.round(((progress.chapter + 1) / progress.total) * 100) : 0;
+
+        return `
+            <div class="book-spine" data-index="${index}" data-color="${index % 14}" title="${book.title} — ${book.author}">
+                <span class="book-spine-title">${book.title}</span>
+                <span class="book-spine-number">#${String(index + 1).padStart(2, '0')}</span>
+                <div class="book-progress-bar">
+                    <div class="book-progress-fill" style="width:${progressPercent}%"></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+
+// ========== 汉堡菜单 ==========
+function handleHamburgerMenu() {
+    const hamburger = document.getElementById('navHamburger');
+    const navLinks = document.getElementById('navLinks');
+    if (!hamburger || !navLinks) return;
+
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navLinks.classList.toggle('active');
+    });
+
+    // 点击导航链接后关闭菜单
+    navLinks.querySelectorAll('.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navLinks.classList.remove('active');
+        });
+    });
+
+    // 点击页面其他区域关闭菜单
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.navbar')) {
+            hamburger.classList.remove('active');
+            navLinks.classList.remove('active');
+        }
+    });
+}
+
+// ========== 日期显示 ==========
+function updateDates() {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const navDate = document.getElementById('navDate');
+    const heroDate = document.getElementById('heroDate');
+    if (navDate) navDate.textContent = dateStr;
+    if (heroDate) heroDate.textContent = dateStr;
 }
 
 // ========== 滚动渐入效果 ==========
@@ -232,11 +279,13 @@ function observeElements() {
         rootMargin: '0px 0px -50px 0px'
     });
 
-    document.querySelectorAll('.value-card, .book-card, .about-content').forEach(el => {
+    document.querySelectorAll('.blog-card, .book-spine, .decision-card').forEach(el => {
+
         el.classList.add('fade-in');
         observer.observe(el);
     });
 }
+
 
 // ========== 导航栏滚动效果 ==========
 function handleNavbarScroll() {
@@ -315,13 +364,14 @@ function closeBookModal() {
 
 function handleBookClicks() {
     document.getElementById('bookshelfContainer').addEventListener('click', (e) => {
-        const card = e.target.closest('.book-card');
-        if (card) {
-            const index = parseInt(card.dataset.index);
+        const spine = e.target.closest('.book-spine');
+        if (spine) {
+            const index = parseInt(spine.dataset.index);
             openBookModal(index);
         }
     });
 }
+
 
 function handleModalEvents() {
     const modal = document.getElementById('bookModal');
@@ -530,14 +580,665 @@ function handleReaderEvents() {
     };
 }
 
+// ============================================
+// 博客/读书笔记
+// ============================================
+
+function renderBlog() {
+    const container = document.getElementById('blogContainer');
+    if (!container) return;
+
+    const coverEmojis = ['📝', '✍️', '📖', '💡', '🔍', '🎯', '🧠', '🌟', '📚', '💭'];
+
+    container.innerHTML = blogPosts.map((post, i) => {
+        // 从 tags 中识别语言
+        const langTag = post.tags.find(t => ['中文', 'English', 'Bilingual'].includes(t));
+        const langLabel = langTag || '';
+
+        return `
+            <div class="blog-card" data-id="${post.id}">
+                <div class="blog-card-cover">${coverEmojis[i % coverEmojis.length]}</div>
+                <div class="blog-card-date">${post.date}</div>
+                ${langLabel ? `<span class="blog-card-lang">${langLabel}</span>` : ''}
+                <h3 class="blog-card-title">${post.title}</h3>
+                <p class="blog-card-summary">${post.summary}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+
+function openBlogModal(id) {
+    const post = blogPosts.find(p => p.id === id);
+    if (!post) return;
+
+    // 创建弹窗
+    const overlay = document.createElement('div');
+    overlay.className = 'blog-modal-overlay active';
+    overlay.innerHTML = `
+        <div class="blog-modal-content">
+            <button class="blog-modal-close">&times;</button>
+            <div class="blog-modal-meta">
+                <span class="blog-modal-date">${post.date}</span>
+                ${post.tags.map(tag => `<span class="blog-card-tag">${tag}</span>`).join('')}
+            </div>
+            <div class="blog-modal-body">
+                ${marked.parse(post.content)}
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+
+    // 关闭事件
+    overlay.querySelector('.blog-modal-close').addEventListener('click', () => {
+        overlay.remove();
+        document.body.style.overflow = '';
+    });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+            document.body.style.overflow = '';
+        }
+    });
+
+    document.addEventListener('keydown', function closeOnEscape(e) {
+        if (e.key === 'Escape' && document.body.contains(overlay)) {
+            overlay.remove();
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', closeOnEscape);
+        }
+    });
+}
+
+function handleBlogClicks() {
+    const container = document.getElementById('blogContainer');
+    if (!container) return;
+
+    container.addEventListener('click', (e) => {
+        const card = e.target.closest('.blog-card');
+        if (card) {
+            const id = parseInt(card.dataset.id);
+            openBlogModal(id);
+        }
+    });
+}
+
+// ============================================
+// 投资记录/定投日历
+// ============================================
+
+function renderInvestment() {
+    const statsContainer = document.getElementById('investmentStats');
+    const calendarContainer = document.getElementById('investmentCalendar');
+    if (!statsContainer || !calendarContainer) return;
+
+    const data = investmentData;
+    const stats = data.stats;
+    const profit = stats.currentValue - stats.totalInvested;
+    const profitPercent = ((profit / stats.totalInvested) * 100).toFixed(1);
+
+    // 渲染统计卡片
+    statsContainer.innerHTML = `
+        <div class="stat-card">
+            <div class="stat-value">¥${stats.totalInvested.toLocaleString()}</div>
+            <div class="stat-label">累计投入</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">¥${stats.currentValue.toLocaleString()}</div>
+            <div class="stat-label">当前市值</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value ${profit >= 0 ? '' : ''}" style="color: ${profit >= 0 ? 'var(--accent)' : '#e74c3c'}">${profit >= 0 ? '+' : ''}${profitPercent}%</div>
+            <div class="stat-label">收益率</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">${stats.totalMonths}个月</div>
+            <div class="stat-label">定投时长</div>
+        </div>
+    `;
+
+    // 渲染日历
+    const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+    const typeIcons = { invest: '💰', read: '📖', check: '📊' };
+
+    calendarContainer.innerHTML = `
+        <div class="calendar-title">📅 ${data.calendar.year}年 定投日历</div>
+        ${data.calendar.months.map(m => `
+            <div class="calendar-month">
+                <div class="calendar-month-title">${monthNames[m.month - 1]}</div>
+                ${m.days.map(d => `
+                    <div class="calendar-day">
+                        <span class="calendar-day-icon">${typeIcons[d.type] || '📌'}</span>
+                        <span class="calendar-day-date">${d.date}</span>
+                        <span class="calendar-day-note">${d.note}</span>
+                        ${d.amount ? `<span class="calendar-day-amount">¥${d.amount}</span>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+        `).join('')}
+    `;
+}
+
+// ============================================
+// 家人照片墙
+// ============================================
+
+const familyPhotos = [
+    { emoji: '👨‍👩‍👧‍👦', label: '全家福', date: '2024-03' },
+    { emoji: '🎂', label: '生日派对', date: '2024-02' },
+    { emoji: '🏔️', label: '登山旅行', date: '2024-01' },
+    { emoji: '🎄', label: '圣诞节', date: '2023-12' },
+    { emoji: '🏖️', label: '海边度假', date: '2023-10' },
+    { emoji: '🌸', label: '春日野餐', date: '2024-03' },
+    { emoji: '🎉', label: '新年聚会', date: '2024-01' },
+    { emoji: '🍳', label: '家庭早餐', date: '2024-02' },
+];
+
+function renderFamily() {
+    const container = document.getElementById('familyContainer');
+    if (!container) return;
+
+    container.innerHTML = familyPhotos.map(photo => `
+        <div class="family-card">
+            <span class="family-card-emoji">${photo.emoji}</span>
+            <span class="family-card-date">${photo.date}</span>
+            <span class="family-card-label">${photo.label}</span>
+        </div>
+    `).join('');
+}
+
+// ============================================
+// 朋友留言板
+// ============================================
+
+function loadMessages() {
+    try {
+        const saved = localStorage.getItem('lrkk-messages');
+        return saved ? JSON.parse(saved) : [
+            { name: 'LRKK', text: '欢迎来到我们的家族网站！留下你的足迹吧 😊', date: '2024-03-15' },
+            { name: '朋友A', text: '祝LRKK家族越来越好！持续建设，慢慢变好 💪', date: '2024-03-14' },
+            { name: '朋友B', text: '读书架上的书都很棒，推荐给大家！', date: '2024-03-10' }
+        ];
+    } catch(e) {
+        return [];
+    }
+}
+
+function saveMessages(messages) {
+    try {
+        localStorage.setItem('lrkk-messages', JSON.stringify(messages));
+    } catch(e) {}
+}
+
+function renderMessages() {
+    const container = document.getElementById('messagesList');
+    if (!container) return;
+
+    const messages = loadMessages();
+    container.innerHTML = messages.map(msg => `
+        <div class="message-card">
+            <div class="message-card-name">${escapeHtml(msg.name)}</div>
+            <div class="message-card-date">${msg.date}</div>
+            <div class="message-card-text">${escapeHtml(msg.text)}</div>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function handleMessageSubmit() {
+    const nameInput = document.getElementById('messageName');
+    const textInput = document.getElementById('messageText');
+    const submitBtn = document.getElementById('messageSubmit');
+    if (!nameInput || !textInput || !submitBtn) return;
+
+    submitBtn.addEventListener('click', () => {
+        const name = nameInput.value.trim() || '匿名';
+        const text = textInput.value.trim();
+        if (!text) {
+            alert('请写下你想说的话~');
+            return;
+        }
+
+        const messages = loadMessages();
+        messages.unshift({
+            name: name,
+            text: text,
+            date: new Date().toISOString().split('T')[0]
+        });
+        saveMessages(messages);
+        renderMessages();
+
+        nameInput.value = '';
+        textInput.value = '';
+    });
+}
+
+// ============================================
+// 决策记录库 - 本地存储
+// ============================================
+
+// 配置
+const DECISION_CONFIG = {
+    password: '1949',
+    storageKey: 'lrkk-decisions'
+};
+
+// 决策数据缓存
+let decisionsCache = [];
+let pendingAction = null; // { type: 'add' | 'edit' | 'delete', id?: string }
+
+// ========== 本地存储操作 ==========
+
+function loadDecisions() {
+    try {
+        const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
+        if (saved) {
+            decisionsCache = JSON.parse(saved);
+        } else {
+            // 初始化示例数据
+            decisionsCache = [
+                {
+                    id: 1,
+                    title: '开始长期定投计划',
+                    reason: '认识到定投是普通人最可靠的财富积累方式，通过长期持有优质资产享受复利效应。',
+                    effect: '每月固定投入，无论市场涨跌，坚持 10 年以上，实现财富的稳健增长。',
+                    improvements: [
+                        { text: '将定投频率从每月改为每周，降低择时风险', date: '2024-06-01' },
+                        { text: '增加债券 ETF 配置，平衡投资组合风险', date: '2024-09-15' }
+                    ],
+                    createdAt: '2024-01-15T08:00:00.000Z',
+                    updatedAt: '2024-09-15T10:30:00.000Z'
+                },
+                {
+                    id: 2,
+                    title: '建立每日阅读习惯',
+                    reason: '阅读是提升认知最有效的方式，但之前总是断断续续，需要建立持续的习惯。',
+                    effect: '每天至少阅读 30 分钟，一年读完 20 本好书，形成系统的知识体系。',
+                    improvements: [
+                        { text: '从纸质书切换到电子书+听书结合，利用碎片时间', date: '2024-03-10' },
+                        { text: '建立读书笔记模板，每读完一本写一篇总结', date: '2024-05-20' },
+                        { text: '加入读书社群，每周分享读书心得', date: '2024-08-01' }
+                    ],
+                    createdAt: '2024-01-10T08:00:00.000Z',
+                    updatedAt: '2024-08-01T14:00:00.000Z'
+                },
+                {
+                    id: 3,
+                    title: '每周家庭日计划',
+                    reason: '工作忙碌导致陪伴家人的时间越来越少，需要刻意安排家庭时间。',
+                    effect: '每周至少有一天完全放下工作，全身心陪伴家人，增进家庭关系。',
+                    improvements: [
+                        { text: '固定周日为家庭日，提前规划活动内容', date: '2024-04-05' }
+                    ],
+                    createdAt: '2024-02-20T08:00:00.000Z',
+                    updatedAt: '2024-04-05T09:00:00.000Z'
+                }
+            ];
+            saveDecisions();
+        }
+        renderDecisions();
+    } catch(e) {
+        decisionsCache = [];
+        renderDecisions();
+    }
+}
+
+function saveDecisions() {
+    try {
+        localStorage.setItem(DECISION_CONFIG.storageKey, JSON.stringify(decisionsCache));
+    } catch(e) {}
+}
+
+// ========== 密码验证 ==========
+
+function verifyPassword(inputPassword) {
+    return inputPassword === DECISION_CONFIG.password;
+}
+
+function showPasswordModal(action) {
+    pendingAction = action;
+    document.getElementById('decisionPasswordInput').value = '';
+    document.getElementById('decisionPasswordError').style.display = 'none';
+    document.getElementById('decisionPasswordModal').classList.add('active');
+}
+
+function closePasswordModal() {
+    document.getElementById('decisionPasswordModal').classList.remove('active');
+    pendingAction = null;
+}
+
+// ========== 渲染决策列表 ==========
+
+function renderDecisions() {
+    const container = document.getElementById('decisionsContainer');
+    const countEl = document.getElementById('decisionCount');
+    if (!container) return;
+
+    // 按创建时间倒序排列
+    const sorted = [...decisionsCache].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    countEl.textContent = `共 ${sorted.length} 条决策`;
+
+    if (sorted.length === 0) {
+        container.innerHTML = `
+            <div class="decision-empty">
+                <span class="decision-empty-icon">📋</span>
+                还没有决策记录<br>
+                <small style="color:var(--text-muted);font-size:0.8rem;">点击上方「新增决策」开始记录</small>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = sorted.map(decision => `
+        <div class="decision-card" data-id="${decision.id}">
+            <div class="decision-card-header">
+                <h3 class="decision-card-title">${escapeHtml(decision.title)}</h3>
+                <span class="decision-card-date">${formatDate(decision.createdAt)}</span>
+            </div>
+            ${decision.reason ? `<div class="decision-card-reason">📝 ${escapeHtml(truncateText(decision.reason, 80))}</div>` : ''}
+            ${decision.effect ? `<div class="decision-card-effect">🎯 ${escapeHtml(truncateText(decision.effect, 80))}</div>` : ''}
+            ${decision.improvements && decision.improvements.length > 0 ? `
+                <div class="decision-card-improvements">
+                    ${decision.improvements.map(imp => `<span class="decision-improvement-tag">🔄 ${escapeHtml(imp.text)}</span>`).join('')}
+                </div>
+            ` : ''}
+            <div class="decision-card-actions">
+                <button class="decision-card-btn" onclick="event.stopPropagation(); openDecisionDetail(${decision.id})">📋 查看</button>
+                <button class="decision-card-btn" onclick="event.stopPropagation(); addImprovement(${decision.id})">🔄 改进</button>
+                <button class="decision-card-btn" onclick="event.stopPropagation(); editDecision(${decision.id})">✏️ 编辑</button>
+                <button class="decision-card-btn delete" onclick="event.stopPropagation(); deleteDecision(${decision.id})">🗑️ 删除</button>
+            </div>
+        </div>
+    `).join('');
+
+    // 点击卡片查看详情
+    container.querySelectorAll('.decision-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const id = parseInt(card.dataset.id);
+            openDecisionDetail(id);
+        });
+    });
+}
+
+function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function truncateText(text, maxLen) {
+    if (text.length <= maxLen) return text;
+    return text.substring(0, maxLen) + '...';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== 决策详情弹窗 ==========
+
+function openDecisionDetail(id) {
+    const decision = decisionsCache.find(d => d.id === id);
+    if (!decision) return;
+
+    const body = document.getElementById('decisionModalBody');
+    body.innerHTML = `
+        <h3 class="decision-detail-title">${escapeHtml(decision.title)}</h3>
+        <p class="decision-detail-date">创建于 ${formatDate(decision.createdAt)}${decision.updatedAt !== decision.createdAt ? ` · 更新于 ${formatDate(decision.updatedAt)}` : ''}</p>
+        
+        <div class="decision-detail-section">
+            <div class="decision-detail-section-title">📝 决策产生原因</div>
+            <div class="decision-detail-section-content">${escapeHtml(decision.reason) || '未填写'}</div>
+        </div>
+        
+        <div class="decision-detail-section">
+            <div class="decision-detail-section-title">🎯 期望的效果</div>
+            <div class="decision-detail-section-content">${escapeHtml(decision.effect) || '未填写'}</div>
+        </div>
+        
+        <div class="decision-detail-section">
+            <div class="decision-detail-section-title">🔄 改进更新</div>
+            ${decision.improvements && decision.improvements.length > 0 ? `
+                <div class="decision-detail-improvements">
+                    ${decision.improvements.map(imp => `
+                        <div class="decision-detail-improvement">
+                            ${escapeHtml(imp.text)}
+                            <div class="decision-detail-improvement-date">${imp.date}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<div class="decision-detail-section-content" style="color:var(--text-muted);">暂无改进记录</div>'}
+        </div>
+        
+        <div class="decision-detail-actions">
+            <button class="decision-btn" onclick="closeDecisionDetail(); addImprovement(${decision.id})">🔄 添加改进</button>
+            <button class="decision-btn" onclick="closeDecisionDetail(); editDecision(${decision.id})">✏️ 编辑</button>
+            <button class="decision-btn decision-btn-secondary" onclick="closeDecisionDetail()">关闭</button>
+        </div>
+    `;
+
+    document.getElementById('decisionModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDecisionDetail() {
+    document.getElementById('decisionModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// ========== 新增决策 ==========
+
+function openAddDecisionForm() {
+    document.getElementById('decisionFormEditId').value = '';
+    document.getElementById('decisionFormTitle').textContent = '新增决策';
+    document.getElementById('decisionFormTitleInput').value = '';
+    document.getElementById('decisionFormReason').value = '';
+    document.getElementById('decisionFormEffect').value = '';
+    document.getElementById('decisionFormPassword').value = '';
+    document.getElementById('decisionFormModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDecisionForm() {
+    document.getElementById('decisionFormModal').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+function saveDecisionForm() {
+    const password = document.getElementById('decisionFormPassword').value;
+    if (!verifyPassword(password)) {
+        alert('❌ 密码错误，请重试');
+        return;
+    }
+
+    const editId = document.getElementById('decisionFormEditId').value;
+    const title = document.getElementById('decisionFormTitleInput').value.trim();
+    const reason = document.getElementById('decisionFormReason').value.trim();
+    const effect = document.getElementById('decisionFormEffect').value.trim();
+
+    if (!title) {
+        alert('请填写决策标题');
+        return;
+    }
+
+    if (editId) {
+        // 编辑已有决策
+        const decision = decisionsCache.find(d => d.id === parseInt(editId));
+        if (decision) {
+            decision.title = title;
+            decision.reason = reason;
+            decision.effect = effect;
+            decision.updatedAt = new Date().toISOString();
+            saveDecisions();
+            renderDecisions();
+            closeDecisionForm();
+            alert('✅ 决策已更新');
+        }
+    } else {
+        // 新增决策
+        const newDecision = {
+            id: Date.now(),
+            title: title,
+            reason: reason,
+            effect: effect,
+            improvements: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        decisionsCache.unshift(newDecision);
+        saveDecisions();
+        renderDecisions();
+        closeDecisionForm();
+        alert('✅ 决策已创建');
+    }
+}
+
+// ========== 编辑决策 ==========
+
+function editDecision(id) {
+    const decision = decisionsCache.find(d => d.id === id);
+    if (!decision) return;
+
+    showPasswordModal({ type: 'edit', id: id });
+}
+
+function openEditForm(id) {
+    const decision = decisionsCache.find(d => d.id === id);
+    if (!decision) return;
+
+    document.getElementById('decisionFormEditId').value = id;
+    document.getElementById('decisionFormTitle').textContent = '编辑决策';
+    document.getElementById('decisionFormTitleInput').value = decision.title;
+    document.getElementById('decisionFormReason').value = decision.reason;
+    document.getElementById('decisionFormEffect').value = decision.effect;
+    document.getElementById('decisionFormPassword').value = '';
+    document.getElementById('decisionFormModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// ========== 添加改进 ==========
+
+function addImprovement(id) {
+    showPasswordModal({ type: 'improvement', id: id });
+}
+
+function openImprovementForm(id) {
+    const improvement = prompt('📝 描述这次改进的内容：');
+    if (!improvement || !improvement.trim()) return;
+
+    const decision = decisionsCache.find(d => d.id === id);
+    if (!decision) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    if (!decision.improvements) decision.improvements = [];
+    decision.improvements.push({ text: improvement.trim(), date: today });
+    decision.updatedAt = new Date().toISOString();
+
+    saveDecisions();
+    renderDecisions();
+    alert('✅ 改进已记录');
+}
+
+// ========== 删除决策 ==========
+
+function deleteDecision(id) {
+    showPasswordModal({ type: 'delete', id: id });
+}
+
+function confirmDelete(id) {
+    if (!confirm('确定要删除这条决策吗？')) return;
+
+    decisionsCache = decisionsCache.filter(d => d.id !== id);
+    saveDecisions();
+    renderDecisions();
+    alert('✅ 决策已删除');
+}
+
+// ========== 决策事件绑定 ==========
+
+function handleDecisionEvents() {
+    // 新增决策按钮
+    document.getElementById('decisionAddBtn').addEventListener('click', openAddDecisionForm);
+
+    // 表单保存
+    document.getElementById('decisionFormSave').addEventListener('click', saveDecisionForm);
+    document.getElementById('decisionFormCancel').addEventListener('click', closeDecisionForm);
+    document.getElementById('decisionFormClose').addEventListener('click', closeDecisionForm);
+
+    // 详情弹窗关闭
+    document.getElementById('decisionModalClose').addEventListener('click', closeDecisionDetail);
+    document.getElementById('decisionModal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeDecisionDetail();
+    });
+
+    // 密码弹窗
+    document.getElementById('decisionPasswordConfirm').addEventListener('click', () => {
+        const input = document.getElementById('decisionPasswordInput').value;
+        if (verifyPassword(input)) {
+            const action = pendingAction;
+            closePasswordModal();
+            if (action) {
+                if (action.type === 'edit') {
+                    openEditForm(action.id);
+                } else if (action.type === 'improvement') {
+                    openImprovementForm(action.id);
+                } else if (action.type === 'delete') {
+                    confirmDelete(action.id);
+                }
+            }
+        } else {
+            document.getElementById('decisionPasswordError').style.display = 'block';
+        }
+    });
+    document.getElementById('decisionPasswordCancel').addEventListener('click', closePasswordModal);
+    document.getElementById('decisionPasswordClose').addEventListener('click', closePasswordModal);
+
+    // 密码弹窗回车确认
+    document.getElementById('decisionPasswordInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('decisionPasswordConfirm').click();
+        }
+    });
+
+    // 表单弹窗回车保存
+    document.getElementById('decisionFormPassword').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('decisionFormSave').click();
+        }
+    });
+}
+
 // ========== 初始化 ==========
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    updateDates();
     renderBookshelf();
+    renderBlog();
+    renderInvestment();
+
+    renderFamily();
+    renderMessages();
     observeElements();
     handleNavbarScroll();
     handleSmoothScroll();
     handleBookClicks();
     handleModalEvents();
     handleReaderEvents();
+    handleBlogClicks();
+    handleMessageSubmit();
+    handleHamburgerMenu();
+    // 决策记录库初始化
+    handleDecisionEvents();
+    loadDecisions();
 });
+

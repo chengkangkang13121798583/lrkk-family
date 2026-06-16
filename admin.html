@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRKK 管理后台</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 管理后台样式 */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+            padding-top: var(--nav-height);
+        }
+
+        .admin-sidebar {
+            width: 220px;
+            background: var(--bg-alt);
+            border-right: 1px solid var(--border);
+            padding: 24px 0;
+            flex-shrink: 0;
+        }
+
+        .admin-sidebar-title {
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+            padding: 0 20px 16px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .admin-nav-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+            border-left: 2px solid transparent;
+        }
+
+        .admin-nav-item:hover {
+            background: var(--accent-light);
+            color: var(--text);
+        }
+
+        .admin-nav-item.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            background: var(--accent-light);
+            font-weight: 500;
+        }
+
+        .admin-main {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .admin-panel {
+            display: none;
+        }
+
+        .admin-panel.active {
+            display: block;
+        }
+
+        .admin-panel-title {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 24px;
+        }
+
+        .admin-form {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .admin-form-title {
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+
+        .admin-form-group {
+            margin-bottom: 14px;
+        }
+
+        .admin-form-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            font-family: var(--font-sans);
+        }
+
+        .admin-form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .admin-form-input:focus {
+            border-color: var(--accent);
+        }
+
+        .admin-form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.2s ease;
+        }
+
+        .admin-form-textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .admin-form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .admin-btn {
+            padding: 8px 20px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-btn:hover {
+            background: #1E3D29;
+            transform: translateY(-1px);
+        }
+
+        .admin-btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .admin-btn-secondary:hover {
+            background: var(--accent-light);
+            color: var(--text);
+            border-color: var(--border-hover);
+        }
+
+        .admin-btn-danger {
+            background: #e74c3c;
+        }
+
+        .admin-btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .admin-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--card-bg);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .admin-list-item-info {
+            flex: 1;
+        }
+
+        .admin-list-item-title {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .admin-list-item-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .admin-list-item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .admin-list-item-btn {
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            border-radius: 100px;
+            border: 1px solid var(--border);
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.15s ease;
+        }
+
+        .admin-list-item-btn:hover {
+            background: var(--accent-light);
+            color: var(--text);
+        }
+
+        .admin-list-item-btn.delete:hover {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            border-color: #e74c3c;
+        }
+
+        .admin-empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .admin-toast {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            padding: 12px 20px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-family: var(--font-sans);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 5000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .admin-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+            .admin-sidebar {
+                width: 100%;
+                padding: 12px 0;
+                display: flex;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .admin-sidebar-title {
+                display: none;
+            }
+            .admin-nav-item {
+                white-space: nowrap;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+                padding: 8px 16px;
+            }
+            .admin-nav-item.active {
+                border-left-color: transparent;
+                border-bottom-color: var(--accent);
+            }
+            .admin-main {
+                padding: 20px 16px;
+            }
+            .admin-form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="nav-logo">← LRKK</a>
+            <div class="nav-links">
+                <span style="font-size:0.85rem;color:var(--text-muted)">⚙️ 管理后台</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <!-- 侧边栏 -->
+        <div class="admin-sidebar">
+            <div class="admin-sidebar-title">⚙️ 管理后台</div>
+            <button class="admin-nav-item active" data-panel="books">📚 书籍管理</button>
+            <button class="admin-nav-item" data-panel="blog">📝 博客管理</button>
+            <button class="admin-nav-item" data-panel="export">📦 数据导出</button>
+        </div>
+
+        <!-- 主内容 -->
+        <div class="admin-main">
+            <!-- 书籍管理 -->
+            <div class="admin-panel active" id="panel-books">
+                <h2 class="admin-panel-title">📚 书籍管理</h2>
+                
+                <div class="admin-form">
+                    <h3 class="admin-form-title">添加 / 编辑书籍</h3>
+                    <input type="hidden" id="bookEditIndex" value="-1">
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">书名</label>
+                            <input type="text" id="bookTitle" class="admin-form-input" placeholder="输入书名">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">作者</label>
+                            <input type="text" id="bookAuthor" class="admin-form-input" placeholder="输入作者">
+                        </div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">Emoji 图标</label>
+                        <input type="text" id="bookEmoji" class="admin-form-input" placeholder="📖" value="📖">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">简短描述</label>
+                        <input type="text" id="bookDesc" class="admin-form-input" placeholder="一句话描述这本书">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">详细描述</label>
+                        <textarea id="bookDetail" class="admin-form-textarea" placeholder="详细描述这本书的内容和价值"></textarea>
+                    </div>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">标签</label>
+                            <input type="text" id="bookTag" class="admin-form-input" placeholder="如：开源书籍">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">在线阅读链接</label>
+                            <input type="text" id="bookLink" class="admin-form-input" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:16px;">
+                        <button class="admin-btn" id="bookSaveBtn">💾 保存书籍</button>
+                        <button class="admin-btn admin-btn-secondary" id="bookCancelBtn">取消</button>
+                    </div>
+                </div>
+
+                <div class="admin-list" id="bookList">
+                    <!-- 由 JS 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 博客管理 -->
+            <div class="admin-panel" id="panel-blog">
+                <h2 class="admin-panel-title">📝 博客管理</h2>
+                
+                <div class="admin-form">
+                    <h3 class="admin-form-title">添加 / 编辑博客</h3>
+                    <input type="hidden" id="blogEditIndex" value="-1">
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">标题</label>
+                        <input type="text" id="blogTitle" class="admin-form-input" placeholder="输入博客标题">
+                    </div>
+                    <div class="admin-form-row">
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">日期</label>
+                            <input type="date" id="blogDate" class="admin-form-input">
+                        </div>
+                        <div class="admin-form-group">
+                            <label class="admin-form-label">标签（逗号分隔）</label>
+                            <input type="text" id="blogTags" class="admin-form-input" placeholder="读书, 投资, 思考">
+                        </div>
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">摘要</label>
+                        <input type="text" id="blogSummary" class="admin-form-input" placeholder="一句话摘要">
+                    </div>
+                    <div class="admin-form-group">
+                        <label class="admin-form-label">内容（Markdown 格式）</label>
+                        <textarea id="blogContent" class="admin-form-textarea" placeholder="使用 Markdown 格式编写..." style="min-height:200px;"></textarea>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:16px;">
+                        <button class="admin-btn" id="blogSaveBtn">💾 保存博客</button>
+                        <button class="admin-btn admin-btn-secondary" id="blogCancelBtn">取消</button>
+                    </div>
+                </div>
+
+                <div class="admin-list" id="blogList">
+                    <!-- 由 JS 动态生成 -->
+                </div>
+            </div>
+
+            <!-- 数据导出 -->
+            <div class="admin-panel" id="panel-export">
+                <h2 class="admin-panel-title">📦 数据导出</h2>
+                <div class="admin-form">
+                    <h3 class="admin-form-title">导出数据文件</h3>
+                    <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">
+                        将当前数据导出为 JavaScript 文件，可以直接替换项目中的对应文件。
+                    </p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="admin-btn" id="exportBooksBtn">📚 导出书籍数据</button>
+                        <button class="admin-btn" id="exportBlogBtn">📝 导出博客数据</button>
+                        <button class="admin-btn admin-btn-secondary" id="exportAllBtn">📦 导出全部数据</button>
+                    </div>
+                    <div style="margin-top:16px;">
+                        <textarea id="exportOutput" class="admin-form-textarea" readonly placeholder="点击导出按钮查看数据..." style="min-height:200px;font-family:monospace;font-size:0.75rem;"></textarea>
+                        <button class="admin-btn" id="copyExportBtn" style="margin-top:8px;">📋 复制到剪贴板</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="admin-toast" id="adminToast"></div>
+
+    <script>
+        // ========== 数据管理 ==========
+        const ADMIN_KEY = 'lrkk-admin-data';
+
+        function getAdminData() {
+            try {
+                const saved = localStorage.getItem(ADMIN_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch(e) {}
+            return { books: [], blogPosts: [] };
+        }
+
+        function saveAdminData(data) {
+            try {
+                localStorage.setItem(ADMIN_KEY, JSON.stringify(data));
+            } catch(e) {
+                showToast('⚠️ 保存失败，请检查浏览器存储空间');
+            }
+        }
+
+        // ========== Toast ==========
+        function showToast(msg) {
+            const toast = document.getElementById('adminToast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        // ========== 侧边栏切换 ==========
+        document.querySelectorAll('.admin-nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.admin-nav-item').forEach(n => n.classList.remove('active'));
+                document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+                item.classList.add('active');
+                document.getElementById('panel-' + item.dataset.panel).classList.add('active');
+            });
+        });
+
+        // ========== 书籍管理 ==========
+        function renderBookList() {
+            const data = getAdminData();
+            const container = document.getElementById('bookList');
+            if (data.books.length === 0) {
+                container.innerHTML = '<div class="admin-empty">还没有添加书籍，使用上方表单添加第一本书吧 📚</div>';
+                return;
+            }
+            container.innerHTML = data.books.map((book, i) => `
+                <div class="admin-list-item">
+                    <div class="admin-list-item-info">
+                        <div class="admin-list-item-title">${book.emoji || '📖'} ${book.title}</div>
+                        <div class="admin-list-item-sub">${book.author} · ${book.tag || '未分类'}</div>
+                    </div>
+                    <div class="admin-list-item-actions">
+                        <button class="admin-list-item-btn" onclick="editBook(${i})">✏️ 编辑</button>
+                        <button class="admin-list-item-btn delete" onclick="deleteBook(${i})">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editBook(index) {
+            const data = getAdminData();
+            const book = data.books[index];
+            if (!book) return;
+            document.getElementById('bookEditIndex').value = index;
+            document.getElementById('bookTitle').value = book.title || '';
+            document.getElementById('bookAuthor').value = book.author || '';
+            document.getElementById('bookEmoji').value = book.emoji || '📖';
+            document.getElementById('bookDesc').value = book.desc || '';
+            document.getElementById('bookDetail').value = book.detail || '';
+            document.getElementById('bookTag').value = book.tag || '';
+            document.getElementById('bookLink').value = book.link || '';
+        }
+
+        function deleteBook(index) {
+            if (!confirm('确定要删除这本书吗？')) return;
+            const data = getAdminData();
+            data.books.splice(index, 1);
+            saveAdminData(data);
+            renderBookList();
+            showToast('✅ 已删除');
+        }
+
+        document.getElementById('bookSaveBtn').addEventListener('click', () => {
+            const data = getAdminData();
+            const editIndex = parseInt(document.getElementById('bookEditIndex').value);
+            const book = {
+                emoji: document.getElementById('bookEmoji').value || '📖',
+                title: document.getElementById('bookTitle').value.trim(),
+                author: document.getElementById('bookAuthor').value.trim(),
+                desc: document.getElementById('bookDesc').value.trim(),
+                detail: document.getElementById('bookDetail').value.trim(),
+                tag: document.getElementById('bookTag').value.trim(),
+                link: document.getElementById('bookLink').value.trim()
+            };
+
+            if (!book.title) {
+                showToast('⚠️ 请填写书名');
+                return;
+            }
+
+            if (editIndex >= 0 && editIndex < data.books.length) {
+                data.books[editIndex] = book;
+                showToast('✅ 书籍已更新');
+            } else {
+                data.books.push(book);
+                showToast('✅ 书籍已添加');
+            }
+
+            saveAdminData(data);
+            renderBookList();
+            document.getElementById('bookEditIndex').value = -1;
+            document.querySelectorAll('#bookTitle, #bookAuthor, #bookDesc, #bookDetail, #bookTag, #bookLink').forEach(el => el.value = '');
+        });
+
+        document.getElementById('bookCancelBtn').addEventListener('click', () => {
+            document.getElementById('bookEditIndex').value = -1;
+            document.querySelectorAll('#bookTitle, #bookAuthor, #bookDesc, #bookDetail, #bookTag, #bookLink').forEach(el => el.value = '');
+        });
+
+        // ========== 博客管理 ==========
+        function renderBlogList() {
+            const data = getAdminData();
+            const container = document.getElementById('blogList');
+            if (data.blogPosts.length === 0) {
+                container.innerHTML = '<div class="admin-empty">还没有添加博客，使用上方表单添加第一篇吧 📝</div>';
+                return;
+            }
+            container.innerHTML = data.blogPosts.map((post, i) => `
+                <div class="admin-list-item">
+                    <div class="admin-list-item-info">
+                        <div class="admin-list-item-title">${post.title}</div>
+                        <div class="admin-list-item-sub">${post.date} · ${(post.tags || []).join(', ')}</div>
+                    </div>
+                    <div class="admin-list-item-actions">
+                        <button class="admin-list-item-btn" onclick="editBlog(${i})">✏️ 编辑</button>
+                        <button class="admin-list-item-btn delete" onclick="deleteBlog(${i})">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editBlog(index) {
+            const data = getAdminData();
+            const post = data.blogPosts[index];
+            if (!post) return;
+            document.getElementById('blogEditIndex').value = index;
+            document.getElementById('blogTitle').value = post.title || '';
+            document.getElementById('blogDate').value = post.date || '';
+            document.getElementById('blogTags').value = (post.tags || []).join(', ');
+            document.getElementById('blogSummary').value = post.summary || '';
+            document.getElementById('blogContent').value = post.content || '';
+        }
+
+        function deleteBlog(index) {
+            if (!confirm('确定要删除这篇博客吗？')) return;
+            const data = getAdminData();
+            data.blogPosts.splice(index, 1);
+            saveAdminData(data);
+            renderBlogList();
+            showToast('✅ 已删除');
+        }
+
+        document.getElementById('blogSaveBtn').addEventListener('click', () => {
+            const data = getAdminData();
+            const editIndex = parseInt(document.getElementById('blogEditIndex').value);
+            const tagsStr = document.getElementById('blogTags').value.trim();
+            const post = {
+                title: document.getElementById('blogTitle').value.trim(),
+                date: document.getElementById('blogDate').value || new Date().toISOString().split('T')[0],
+                tags: tagsStr ? tagsStr.split(/[,，]/).map(t => t.trim()).filter(Boolean) : [],
+                summary: document.getElementById('blogSummary').value.trim(),
+                content: document.getElementById('blogContent').value.trim()
+            };
+
+            if (!post.title) {
+                showToast('⚠️ 请填写博客标题');
+                return;
+            }
+            if (!post.content) {
+                showToast('⚠️ 请填写博客内容');
+                return;
+            }
+
+            if (editIndex >= 0 && editIndex < data.blogPosts.length) {
+                data.blogPosts[editIndex] = post;
+                showToast('✅ 博客已更新');
+            } else {
+                post.id = Date.now();
+                data.blogPosts.push(post);
+                showToast('✅ 博客已添加');
+            }
+
+            saveAdminData(data);
+            renderBlogList();
+            document.getElementById('blogEditIndex').value = -1;
+            document.querySelectorAll('#blogTitle, #blogDate, #blogTags, #blogSummary, #blogContent').forEach(el => el.value = '');
+        });
+
+        document.getElementById('blogCancelBtn').addEventListener('click', () => {
+            document.getElementById('blogEditIndex').value = -1;
+            document.querySelectorAll('#blogTitle, #blogDate, #blogTags, #blogSummary, #blogContent').forEach(el => el.value = '');
+        });
+
+        // ========== 数据导出 ==========
+        function generateBooksJS() {
+            const data = getAdminData();
+            const books = data.books;
+            return `// 书籍数据 - 由管理后台生成\n// 将此文件内容复制到 script.js 的 books 数组中\n\nconst books = ${JSON.stringify(books, null, 4)};`;
+        }
+
+        function generateBlogJS() {
+            const data = getAdminData();
+            const posts = data.blogPosts.map((p, i) => ({
+                id: p.id || (i + 1),
+                title: p.title,
+                date: p.date,
+                summary: p.summary,
+                tags: p.tags || [],
+                content: p.content
+            }));
+            return `// 博客数据 - 由管理后台生成\n// 将此文件内容复制到 blogContent.js 中\n\nconst blogPosts = ${JSON.stringify(posts, null, 4)};`;
+        }
+
+        document.getElementById('exportBooksBtn').addEventListener('click', () => {
+            document.getElementById('exportOutput').value = generateBooksJS();
+            showToast('✅ 书籍数据已生成');
+        });
+
+        document.getElementById('exportBlogBtn').addEventListener('click', () => {
+            document.getElementById('exportOutput').value = generateBlogJS();
+            showToast('✅ 博客数据已生成');
+        });
+
+        document.getElementById('exportAllBtn').addEventListener('click', () => {
+            const output = `// ============================================\n// LRKK Family - 完整数据导出\n// 生成时间: ${new Date().toLocaleString()}\n// ============================================\n\n${generateBooksJS()}\n\n${generateBlogJS()}`;
+            document.getElementById('exportOutput').value = output;
+            showToast('✅ 全部数据已生成');
+        });
+
+        document.getElementById('copyExportBtn').addEventListener('click', () => {
+            const text = document.getElementById('exportOutput').value;
+            if (!text) {
+                showToast('⚠️ 没有可复制的内容');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📋 已复制到剪贴板');
+            }).catch(() => {
+                // fallback
+                document.getElementById('exportOutput').select();
+                document.execCommand('copy');
+                showToast('📋 已复制到剪贴板');
+            });
+        });
+
+        // ========== 初始化 ==========
+        renderBookList();
+        renderBlogList();
+    </script>
+</body>
+</html>
