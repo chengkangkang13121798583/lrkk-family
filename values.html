@@ -428,7 +428,53 @@
         </div>
     </div>
 
+    <!-- 密码验证弹窗 -->
+    <div class="value-card-overlay" id="valuePasswordModal">
+        <div class="value-card" style="max-width:360px;text-align:center;">
+            <button class="value-card-close" id="valuePasswordClose">&times;</button>
+            <div style="padding:20px 0;">
+                <div style="font-size:2.5rem;margin-bottom:12px;">🔒</div>
+                <h3 style="font-family:Georgia,'Noto Serif SC',serif;font-size:1.1rem;font-weight:500;color:var(--text);margin-bottom:16px;">请输入管理密码</h3>
+                <input type="password" id="valuePasswordInput" class="value-form-input" placeholder="输入密码" style="margin-bottom:16px;">
+                <div style="display:flex;gap:8px;justify-content:center;">
+                    <button class="value-card-btn primary" id="valuePasswordConfirm">确认</button>
+                    <button class="value-card-btn" id="valuePasswordCancel">取消</button>
+                </div>
+                <p id="valuePasswordError" style="display:none;color:#8b0000;font-size:0.8rem;margin-top:8px;">❌ 密码错误，请重试</p>
+            </div>
+        </div>
+    </div>
+
     <script src="values-data.js"></script>
     <script src="values.js"></script>
+    <script>
+        // 价值观密码弹窗事件绑定
+        document.getElementById('valuePasswordConfirm').addEventListener('click', () => {
+            const input = document.getElementById('valuePasswordInput').value;
+            if (verifyValuePassword(input)) {
+                const action = valuePendingAction;
+                closeValuePasswordModal();
+                if (action) {
+                    if (action.type === 'edit') {
+                        confirmEditValue(action.id);
+                    } else if (action.type === 'delete') {
+                        confirmDeleteValue(action.id);
+                    }
+                }
+            } else {
+                document.getElementById('valuePasswordError').style.display = 'block';
+            }
+        });
+        document.getElementById('valuePasswordCancel').addEventListener('click', closeValuePasswordModal);
+        document.getElementById('valuePasswordClose').addEventListener('click', closeValuePasswordModal);
+        document.getElementById('valuePasswordInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('valuePasswordConfirm').click();
+            }
+        });
+        document.getElementById('valuePasswordModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeValuePasswordModal();
+        });
+    </script>
 </body>
 </html>

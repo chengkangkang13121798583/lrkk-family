@@ -4,6 +4,15 @@
 
 const VALUES_STORAGE_KEY = 'lrkk-values';
 
+// 密码配置
+const VALUES_CONFIG = {
+    password: '1949'
+};
+
+function verifyValuePassword(inputPassword) {
+    return inputPassword === VALUES_CONFIG.password;
+}
+
 // 初始价值观数据
 const DEFAULT_VALUES = [
     {

@@ -1829,5 +1829,273 @@ document.addEventListener('DOMContentLoaded', () => {
         handleDecisionEvents();
         loadDecisions();
     }
+
+    // 犯错记录初始化（仅主页）
+    if (!isDecisionsPage && !isBookshelfPage) {
+        renderMistakesPreview();
+        document.getElementById('mistakeAddBtn')?.addEventListener('click', openAddMistakeForm);
+    }
+
+    // 犯错记录密码弹窗事件绑定
+    const mistakePasswordConfirm = document.getElementById('mistakePasswordConfirm');
+    if (mistakePasswordConfirm) {
+        mistakePasswordConfirm.addEventListener('click', () => {
+            const input = document.getElementById('mistakePasswordInput').value;
+            if (verifyMistakePassword(input)) {
+                const action = mistakePendingAction;
+                closeMistakePasswordModal();
+                if (action) {
+                    if (action.type === 'edit') {
+                        confirmEditMistake(action.id);
+                    } else if (action.type === 'delete') {
+                        confirmDeleteMistake(action.id);
+                    }
+                }
+            } else {
+                document.getElementById('mistakePasswordError').style.display = 'block';
+            }
+        });
+    }
+    document.getElementById('mistakePasswordCancel')?.addEventListener('click', closeMistakePasswordModal);
+    document.getElementById('mistakePasswordClose')?.addEventListener('click', closeMistakePasswordModal);
+    document.getElementById('mistakePasswordInput')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            document.getElementById('mistakePasswordConfirm')?.click();
+        }
+    });
 });
+
+// ============================================
+// 犯错记录 - 主页预览
+// ============================================
+
+function renderMistakesPreview() {
+    const container = document.getElementById('mistakesContainer');
+    if (!container) return;
+
+    const mistakes = getLatestMistakes(3);
+    if (!mistakes || mistakes.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:var(--text-muted);font-size:0.85rem;">
+                还没有犯错记录，点击「+ 新增」添加第一条
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = mistakes.map(m => `
+        <div class="mistake-card" style="background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:18px 22px;box-shadow:var(--card-shadow);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                <span style="font-size:0.65rem;color:var(--text-muted);font-family:var(--font-sans);">${m.createdAt}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div style="grid-column:1/-1;">
+                    <span style="font-size:0.6rem;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-family:var(--font-sans);">❌ 犯的错</span>
+                    <p style="font-size:0.85rem;color:var(--accent);line-height:1.5;margin-top:2px;font-weight:500;">${escapeHtml(m.mistake)}</p>
+                </div>
+                <div>
+                    <span style="font-size:0.6rem;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-family:var(--font-sans);">⚡ 后果</span>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin-top:2px;">${escapeHtml(m.consequence)}</p>
+                </div>
+                <div>
+                    <span style="font-size:0.6rem;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-family:var(--font-sans);">🤝 承担责任</span>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin-top:2px;">${escapeHtml(m.responsibility)}</p>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <span style="font-size:0.6rem;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;font-family:var(--font-sans);">📈 改进</span>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin-top:2px;">${escapeHtml(m.improvement)}</p>
+                </div>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);justify-content:flex-end;">
+                <button class="mistake-card-btn" onclick="openEditMistakeForm('${m.id}')">编辑</button>
+                <button class="mistake-card-btn delete" onclick="deleteMistakeFromHome('${m.id}')">删除</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ========== 主页新增弹窗 ==========
+function openAddMistakeForm() {
+    const overlay = document.getElementById('mistakeModal');
+    if (overlay) {
+        // 如果 mistakes.html 的弹窗存在，直接复用
+        document.getElementById('mistakeModalTitle').textContent = '新增记录';
+        document.getElementById('mistakeFormEditId').value = '';
+        document.getElementById('mistakeFormMistake').value = '';
+        document.getElementById('mistakeFormConsequence').value = '';
+        document.getElementById('mistakeFormResponsibility').value = '';
+        document.getElementById('mistakeFormImprovement').value = '';
+        overlay.classList.add('active');
+        return;
+    }
+
+    // 否则创建简易弹窗
+    const existing = document.getElementById('mistakeSimpleModal');
+    if (existing) {
+        existing.classList.add('active');
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'mistakeSimpleModal';
+    modal.className = 'mistake-modal-overlay active';
+    modal.innerHTML = `
+        <div class="mistake-modal">
+            <button class="mistake-modal-close" onclick="this.closest('.mistake-modal-overlay').classList.remove('active')">&times;</button>
+            <h3 class="mistake-modal-title">新增记录</h3>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">❌ 犯的错</label>
+                <textarea class="mistake-form-textarea" id="simpleMistake" placeholder="描述你犯的错..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">⚡ 后果</label>
+                <textarea class="mistake-form-textarea" id="simpleConsequence" placeholder="造成了什么后果..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">🤝 承担责任</label>
+                <textarea class="mistake-form-textarea" id="simpleResponsibility" placeholder="如何承担责任..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">📈 改进</label>
+                <textarea class="mistake-form-textarea" id="simpleImprovement" placeholder="如何改进..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-actions">
+                <button class="mistake-btn mistake-btn-secondary" onclick="this.closest('.mistake-modal-overlay').classList.remove('active')">取消</button>
+                <button class="mistake-btn" onclick="saveSimpleMistake()">💾 保存</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function saveSimpleMistake() {
+    const mistake = document.getElementById('simpleMistake').value.trim();
+    const consequence = document.getElementById('simpleConsequence').value.trim();
+    const responsibility = document.getElementById('simpleResponsibility').value.trim();
+    const improvement = document.getElementById('simpleImprovement').value.trim();
+
+    if (!mistake) {
+        alert('请填写「犯的错」');
+        return;
+    }
+
+    addMistake({ mistake, consequence, responsibility, improvement });
+    document.getElementById('mistakeSimpleModal').classList.remove('active');
+    renderMistakesPreview();
+}
+
+// ========== 主页编辑（需密码验证） ==========
+function openEditMistakeForm(id) {
+    // 弹出密码验证
+    showMistakePasswordModal({ type: 'edit', id: id });
+}
+
+function confirmEditMistake(id) {
+    const m = getMistakeById(id);
+    if (!m) return;
+
+    const overlay = document.getElementById('mistakeModal');
+    if (overlay) {
+        document.getElementById('mistakeModalTitle').textContent = '编辑记录';
+        document.getElementById('mistakeFormEditId').value = id;
+        document.getElementById('mistakeFormMistake').value = m.mistake;
+        document.getElementById('mistakeFormConsequence').value = m.consequence;
+        document.getElementById('mistakeFormResponsibility').value = m.responsibility;
+        document.getElementById('mistakeFormImprovement').value = m.improvement;
+        overlay.classList.add('active');
+        return;
+    }
+
+    // 简易编辑弹窗
+    const existing = document.getElementById('mistakeSimpleModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'mistakeSimpleModal';
+    modal.className = 'mistake-modal-overlay active';
+    modal.innerHTML = `
+        <div class="mistake-modal">
+            <button class="mistake-modal-close" onclick="this.closest('.mistake-modal-overlay').classList.remove('active')">&times;</button>
+            <h3 class="mistake-modal-title">编辑记录</h3>
+            <input type="hidden" id="simpleEditId" value="${id}">
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">❌ 犯的错</label>
+                <textarea class="mistake-form-textarea" id="simpleMistake" rows="2">${escapeHtml(m.mistake)}</textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">⚡ 后果</label>
+                <textarea class="mistake-form-textarea" id="simpleConsequence" rows="2">${escapeHtml(m.consequence)}</textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">🤝 承担责任</label>
+                <textarea class="mistake-form-textarea" id="simpleResponsibility" rows="2">${escapeHtml(m.responsibility)}</textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">📈 改进</label>
+                <textarea class="mistake-form-textarea" id="simpleImprovement" rows="2">${escapeHtml(m.improvement)}</textarea>
+            </div>
+            <div class="mistake-form-actions">
+                <button class="mistake-btn mistake-btn-secondary" onclick="this.closest('.mistake-modal-overlay').classList.remove('active')">取消</button>
+                <button class="mistake-btn" onclick="saveSimpleEditMistake()">💾 保存</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function saveSimpleEditMistake() {
+    const id = document.getElementById('simpleEditId').value;
+    const mistake = document.getElementById('simpleMistake').value.trim();
+    const consequence = document.getElementById('simpleConsequence').value.trim();
+    const responsibility = document.getElementById('simpleResponsibility').value.trim();
+    const improvement = document.getElementById('simpleImprovement').value.trim();
+
+    if (!mistake) {
+        alert('请填写「犯的错」');
+        return;
+    }
+
+    updateMistake(id, { mistake, consequence, responsibility, improvement });
+    document.getElementById('mistakeSimpleModal').classList.remove('active');
+    renderMistakesPreview();
+}
+
+// ========== 犯错记录 - 密码验证 ==========
+let mistakePendingAction = null;
+
+function showMistakePasswordModal(action) {
+    mistakePendingAction = action;
+    const modal = document.getElementById('mistakePasswordModal');
+    if (modal) {
+        document.getElementById('mistakePasswordInput').value = '';
+        document.getElementById('mistakePasswordError').style.display = 'none';
+        modal.classList.add('active');
+    }
+}
+
+function closeMistakePasswordModal() {
+    const modal = document.getElementById('mistakePasswordModal');
+    if (modal) modal.classList.remove('active');
+    mistakePendingAction = null;
+}
+
+// ========== 主页删除（需密码验证） ==========
+function deleteMistakeFromHome(id) {
+    showMistakePasswordModal({ type: 'delete', id: id });
+}
+
+function confirmDeleteMistake(id) {
+    const m = getMistakeById(id);
+    if (!m) return;
+    if (!confirm(`确定要删除这条记录吗？\n\n「${m.mistake.substring(0, 30)}${m.mistake.length > 30 ? '...' : ''}」`)) return;
+    deleteMistake(id);
+    renderMistakesPreview();
+}
 

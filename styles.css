@@ -359,10 +359,25 @@ a {
     box-shadow: var(--card-shadow);
 }
 
-.hero-map {
+.hero-map-wrap {
+    position: relative;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.hero-map-img {
     width: 100%;
     height: auto;
-    margin-bottom: 16px;
+    display: block;
+}
+
+.hero-map-label {
+    position: absolute;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
 }
 
 .hero-status-list {
@@ -1969,6 +1984,58 @@ a {
 .blog-modal-date {
     font-size: 0.75rem;
     color: var(--text-muted);
+}
+
+/* ========== 犯错记录（主页预览） ========== */
+.mistakes-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mistake-add-btn {
+    padding: 6px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mistake-add-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.mistakes-view-all-wrap {
+    text-align: center;
+    margin-top: 24px;
+}
+
+.mistakes-view-all-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 28px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-family: var(--font-sans);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    background: var(--card-bg);
+}
+
+.mistakes-view-all-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-light);
+    transform: translateY(-1px);
 }
 
 /* ========== 投资记录区域 ========== */

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>犯错记录 · LRKK</title>
+    <meta name="description" content="LRKK 犯错记录库 — learn from every fall">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        /* 顶部导航 */
+        .mistakes-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(12px);
+        }
+
+        .mistakes-nav-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mistakes-nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mistakes-nav-back {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .mistakes-nav-back:hover {
+            color: var(--accent);
+        }
+
+        .mistakes-nav-title {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .mistakes-nav-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .mistakes-nav-add {
+            padding: 6px 18px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            background: none;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.2s;
+        }
+
+        .mistakes-nav-add:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* 搜索框 */
+        .mistakes-search-wrap {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 20px 28px 0;
+        }
+
+        .mistakes-search {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 18px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            background: var(--card-bg);
+            font-size: 0.85rem;
+            color: var(--text);
+            font-family: var(--font-sans);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .mistakes-search:focus {
+            border-color: var(--accent);
+        }
+
+        .mistakes-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* 列表容器 */
+        .mistakes-page {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 20px 28px 60px;
+        }
+
+        .mistakes-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 卡片 */
+        .mistake-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px 28px;
+            box-shadow: var(--card-shadow);
+            transition: box-shadow 0.2s;
+        }
+
+        .mistake-card:hover {
+            box-shadow: var(--card-shadow-hover);
+        }
+
+        .mistake-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .mistake-card-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-sans);
+            white-space: nowrap;
+        }
+
+        .mistake-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .mistake-field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .mistake-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .mistake-field-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-family: var(--font-sans);
+        }
+
+        .mistake-field-label .icon {
+            margin-right: 3px;
+        }
+
+        .mistake-field-value {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .mistake-field-value.mistake {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .mistake-card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+            justify-content: flex-end;
+        }
+
+        .mistake-card-btn {
+            padding: 4px 14px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            background: none;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-sans);
+            transition: all 0.15s;
+        }
+
+        .mistake-card-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        .mistake-card-btn.delete:hover {
+            border-color: #e74c3c;
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.06);
+        }
+
+        /* 空状态 */
+        .mistakes-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .mistakes-empty-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .mistakes-empty-text {
+            font-size: 0.85rem;
+        }
+
+        /* 弹窗 */
+        .mistake-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(6px);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .mistake-modal-overlay.active {
+            display: flex;
+        }
+
+        .mistake-modal {
+            background: var(--card-bg);
+            border-radius: 14px;
+            max-width: 520px;
+            width: 100%;
+            padding: 32px 28px 24px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .mistake-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            font-family: sans-serif;
+        }
+
+        .mistake-modal-close:hover {
+            background: var(--accent-light);
+            color: var(--text);
+        }
+
+        .mistake-modal-title {
+            font-family: var(--font-serif);
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        .mistake-form-group {
+            margin-bottom: 14px;
+        }
+
+        .mistake-form-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .mistake-form-input,
+        .mistake-form-textarea {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            font-size: 0.85rem;
+            color: var(--text);
+            font-family: var(--font-sans);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .mistake-form-input:focus,
+        .mistake-form-textarea:focus {
+            border-color: var(--accent);
+        }
+
+        .mistake-form-textarea {
+            min-height: 56px;
+            resize: vertical;
+        }
+
+        .mistake-form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .mistake-btn {
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-family: var(--font-sans);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .mistake-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .mistake-btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .mistake-btn-secondary:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-light);
+        }
+
+        /* 响应式 */
+        @media (max-width: 600px) {
+            .mistake-fields {
+                grid-template-columns: 1fr;
+            }
+            .mistake-card {
+                padding: 18px 16px;
+            }
+            .mistakes-nav-inner {
+                padding: 12px 16px;
+            }
+            .mistakes-page {
+                padding: 16px 16px 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <nav class="mistakes-nav">
+        <div class="mistakes-nav-inner">
+            <div class="mistakes-nav-left">
+                <a href="index.html" class="mistakes-nav-back">← 返回</a>
+                <span class="mistakes-nav-title">犯错记录</span>
+                <span class="mistakes-nav-count" id="mistakesCount">0 条</span>
+            </div>
+            <button class="mistakes-nav-add" id="mistakeAddBtn">+ 新增</button>
+        </div>
+    </nav>
+
+    <!-- 搜索框 -->
+    <div class="mistakes-search-wrap">
+        <input type="text" class="mistakes-search" id="mistakeSearchInput" placeholder="🔍 搜索犯错记录..." autocomplete="off">
+    </div>
+
+    <!-- 列表 -->
+    <div class="mistakes-page">
+        <div class="mistakes-list" id="mistakesList">
+            <!-- 由 JS 动态生成 -->
+        </div>
+    </div>
+
+    <!-- 新增/编辑弹窗 -->
+    <div class="mistake-modal-overlay" id="mistakeModal">
+        <div class="mistake-modal">
+            <button class="mistake-modal-close" id="mistakeModalClose">&times;</button>
+            <h3 class="mistake-modal-title" id="mistakeModalTitle">新增记录</h3>
+            <input type="hidden" id="mistakeFormEditId" value="">
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">❌ 犯的错</label>
+                <textarea class="mistake-form-textarea" id="mistakeFormMistake" placeholder="描述你犯的错..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">⚡ 后果</label>
+                <textarea class="mistake-form-textarea" id="mistakeFormConsequence" placeholder="造成了什么后果..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">🤝 承担责任</label>
+                <textarea class="mistake-form-textarea" id="mistakeFormResponsibility" placeholder="如何承担责任..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-group">
+                <label class="mistake-form-label">📈 改进</label>
+                <textarea class="mistake-form-textarea" id="mistakeFormImprovement" placeholder="如何改进..." rows="2"></textarea>
+            </div>
+            <div class="mistake-form-actions">
+                <button class="mistake-btn mistake-btn-secondary" id="mistakeFormCancel">取消</button>
+                <button class="mistake-btn" id="mistakeFormSave">💾 保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 密码验证弹窗 -->
+    <div class="mistake-modal-overlay" id="mistakePasswordModal">
+        <div class="mistake-modal" style="max-width:360px;text-align:center;">
+            <button class="mistake-modal-close" id="mistakePasswordClose">&times;</button>
+            <div style="font-size:2.5rem;margin-bottom:12px;">🔒</div>
+            <h3 style="font-family:Georgia,'Noto Serif SC',serif;font-size:1.1rem;font-weight:500;color:var(--text);margin-bottom:16px;">请输入管理密码</h3>
+            <input type="password" id="mistakePasswordInput" class="mistake-form-input" placeholder="输入密码" style="margin-bottom:16px;">
+            <div style="display:flex;gap:8px;justify-content:center;">
+                <button class="mistake-btn" id="mistakePasswordConfirm">确认</button>
+                <button class="mistake-btn mistake-btn-secondary" id="mistakePasswordCancel">取消</button>
+            </div>
+            <p id="mistakePasswordError" style="display:none;color:#8b0000;font-size:0.8rem;margin-top:8px;">❌ 密码错误，请重试</p>
+        </div>
+    </div>
+
+    <script src="mistakes-data.js"></script>
+    <script>
+        // ============================================
+        // 犯错记录库 - 页面交互
+        // ============================================
+
+        // ========== 渲染列表 ==========
+        function renderMistakes(mistakes) {
+            const container = document.getElementById('mistakesList');
+            const countEl = document.getElementById('mistakesCount');
+
+            if (!mistakes || mistakes.length === 0) {
+                container.innerHTML = `
+                    <div class="mistakes-empty">
+                        <span class="mistakes-empty-icon">📝</span>
+                        <p class="mistakes-empty-text">还没有犯错记录，点击右上角「+ 新增」添加第一条</p>
+                    </div>
+                `;
+                countEl.textContent = '0 条';
+                return;
+            }
+
+            countEl.textContent = `${mistakes.length} 条`;
+
+            container.innerHTML = mistakes.map(m => `
+                <div class="mistake-card">
+                    <div class="mistake-card-header">
+                        <div></div>
+                        <span class="mistake-card-date">${m.createdAt}</span>
+                    </div>
+                    <div class="mistake-fields">
+                        <div class="mistake-field full">
+                            <span class="mistake-field-label"><span class="icon">❌</span>犯的错</span>
+                            <span class="mistake-field-value mistake">${escapeHtml(m.mistake)}</span>
+                        </div>
+                        <div class="mistake-field">
+                            <span class="mistake-field-label"><span class="icon">⚡</span>后果</span>
+                            <span class="mistake-field-value">${escapeHtml(m.consequence)}</span>
+                        </div>
+                        <div class="mistake-field">
+                            <span class="mistake-field-label"><span class="icon">🤝</span>承担责任</span>
+                            <span class="mistake-field-value">${escapeHtml(m.responsibility)}</span>
+                        </div>
+                        <div class="mistake-field full">
+                            <span class="mistake-field-label"><span class="icon">📈</span>改进</span>
+                            <span class="mistake-field-value">${escapeHtml(m.improvement)}</span>
+                        </div>
+                    </div>
+                    <div class="mistake-card-actions">
+                        <button class="mistake-card-btn" onclick="openEditMistake('${m.id}')">编辑</button>
+                        <button class="mistake-card-btn delete" onclick="deleteMistakeConfirm('${m.id}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== 加载数据 ==========
+        function loadAndRender() {
+            const keyword = document.getElementById('mistakeSearchInput').value.trim();
+            let mistakes;
+            if (keyword) {
+                mistakes = searchMistakes(keyword);
+            } else {
+                mistakes = getAllMistakes();
+                mistakes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+            renderMistakes(mistakes);
+        }
+
+        // ========== 搜索 ==========
+        let searchTimeout = null;
+        document.getElementById('mistakeSearchInput').addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(loadAndRender, 200);
+        });
+
+        // ========== 新增 ==========
+        document.getElementById('mistakeAddBtn').addEventListener('click', () => {
+            openMistakeForm(null);
+        });
+
+        function openMistakeForm(id) {
+            const overlay = document.getElementById('mistakeModal');
+            const title = document.getElementById('mistakeModalTitle');
+            const editId = document.getElementById('mistakeFormEditId');
+
+            if (id) {
+                // 编辑模式
+                const m = getMistakeById(id);
+                if (!m) return;
+                title.textContent = '编辑记录';
+                editId.value = id;
+                document.getElementById('mistakeFormMistake').value = m.mistake;
+                document.getElementById('mistakeFormConsequence').value = m.consequence;
+                document.getElementById('mistakeFormResponsibility').value = m.responsibility;
+                document.getElementById('mistakeFormImprovement').value = m.improvement;
+            } else {
+                // 新增模式
+                title.textContent = '新增记录';
+                editId.value = '';
+                document.getElementById('mistakeFormMistake').value = '';
+                document.getElementById('mistakeFormConsequence').value = '';
+                document.getElementById('mistakeFormResponsibility').value = '';
+                document.getElementById('mistakeFormImprovement').value = '';
+            }
+
+            overlay.classList.add('active');
+        }
+
+        // ========== 密码验证 ==========
+        let mistakePendingAction = null;
+
+        function showMistakePasswordModal(action) {
+            mistakePendingAction = action;
+            const modal = document.getElementById('mistakePasswordModal');
+            if (modal) {
+                document.getElementById('mistakePasswordInput').value = '';
+                document.getElementById('mistakePasswordError').style.display = 'none';
+                modal.classList.add('active');
+            }
+        }
+
+        function closeMistakePasswordModal() {
+            const modal = document.getElementById('mistakePasswordModal');
+            if (modal) modal.classList.remove('active');
+            mistakePendingAction = null;
+        }
+
+        function openEditMistake(id) {
+            showMistakePasswordModal({ type: 'edit', id: id });
+        }
+
+        function confirmEditMistake(id) {
+            openMistakeForm(id);
+        }
+
+        // ========== 保存 ==========
+        document.getElementById('mistakeFormSave').addEventListener('click', () => {
+            const editId = document.getElementById('mistakeFormEditId').value;
+            const mistake = document.getElementById('mistakeFormMistake').value.trim();
+            const consequence = document.getElementById('mistakeFormConsequence').value.trim();
+            const responsibility = document.getElementById('mistakeFormResponsibility').value.trim();
+            const improvement = document.getElementById('mistakeFormImprovement').value.trim();
+
+            if (!mistake) {
+                alert('请填写「犯的错」');
+                return;
+            }
+
+            if (editId) {
+                updateMistake(editId, { mistake, consequence, responsibility, improvement });
+            } else {
+                addMistake({ mistake, consequence, responsibility, improvement });
+            }
+
+            closeMistakeForm();
+            loadAndRender();
+        });
+
+        // ========== 删除（带确认） ==========
+        function deleteMistakeConfirm(id) {
+            const m = getMistakeById(id);
+            if (!m) return;
+            if (!confirm(`确定要删除这条记录吗？\n\n「${m.mistake.substring(0, 30)}${m.mistake.length > 30 ? '...' : ''}」`)) return;
+            deleteMistake(id);
+            loadAndRender();
+        }
+
+        // ========== 关闭弹窗 ==========
+        function closeMistakeForm() {
+            document.getElementById('mistakeModal').classList.remove('active');
+        }
+
+        document.getElementById('mistakeModalClose').addEventListener('click', closeMistakeForm);
+        document.getElementById('mistakeFormCancel').addEventListener('click', closeMistakeForm);
+        document.getElementById('mistakeModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeMistakeForm();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMistakeForm();
+        });
+
+        // ========== 密码弹窗事件绑定 ==========
+        document.getElementById('mistakePasswordConfirm').addEventListener('click', () => {
+            const input = document.getElementById('mistakePasswordInput').value;
+            if (verifyMistakePassword(input)) {
+                const action = mistakePendingAction;
+                closeMistakePasswordModal();
+                if (action && action.type === 'edit') {
+                    confirmEditMistake(action.id);
+                }
+            } else {
+                document.getElementById('mistakePasswordError').style.display = 'block';
+            }
+        });
+        document.getElementById('mistakePasswordCancel').addEventListener('click', closeMistakePasswordModal);
+        document.getElementById('mistakePasswordClose').addEventListener('click', closeMistakePasswordModal);
+        document.getElementById('mistakePasswordInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('mistakePasswordConfirm').click();
+            }
+        });
+        document.getElementById('mistakePasswordModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeMistakePasswordModal();
+        });
+
+        // ========== 启动 ==========
+        loadAndRender();
+    </script>
+</body>
+</html>

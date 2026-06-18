@@ -279,8 +279,31 @@ function closeValueCard() {
     document.getElementById('valueCardOverlay').classList.remove('active');
 }
 
-// 编辑价值观
+// ========== 密码验证 ==========
+let valuePendingAction = null;
+
+function showValuePasswordModal(action) {
+    valuePendingAction = action;
+    const modal = document.getElementById('valuePasswordModal');
+    if (modal) {
+        document.getElementById('valuePasswordInput').value = '';
+        document.getElementById('valuePasswordError').style.display = 'none';
+        modal.classList.add('active');
+    }
+}
+
+function closeValuePasswordModal() {
+    const modal = document.getElementById('valuePasswordModal');
+    if (modal) modal.classList.remove('active');
+    valuePendingAction = null;
+}
+
+// 编辑价值观（需密码验证）
 function editValueCard(valueId) {
+    showValuePasswordModal({ type: 'edit', id: valueId });
+}
+
+function confirmEditValue(valueId) {
     const value = getValueById(valueId);
     if (!value) return;
 
@@ -339,6 +362,10 @@ function saveEditValue(valueId) {
 }
 
 function deleteValueCard(valueId) {
+    showValuePasswordModal({ type: 'delete', id: valueId });
+}
+
+function confirmDeleteValue(valueId) {
     if (!confirm('确定要删除这个价值观吗？')) return;
     deleteValue(valueId);
     buildValueNetwork();
