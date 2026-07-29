@@ -301,7 +301,22 @@
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
                 <span class="sync-status" id="syncStatus"></span>
+                <button class="decision-select-btn" id="decisionSelectBtn">☑ 多选</button>
                 <button class="decision-add-btn" id="decisionAddBtn">+ 新增决策</button>
+            </div>
+        </div>
+
+        <!-- 多选操作栏（默认隐藏） -->
+        <div class="decision-batch-bar" id="decisionBatchBar">
+            <div class="decision-batch-left">
+                <label class="decision-select-all-label">
+                    <input type="checkbox" id="decisionSelectAll"> 全选
+                </label>
+                <span class="decision-selected-count" id="decisionSelectedCount">已选 0 条</span>
+            </div>
+            <div class="decision-batch-right">
+                <button class="decision-batch-btn delete" id="decisionBatchDelete">🗑️ 批量删除</button>
+                <button class="decision-batch-btn" id="decisionBatchCancel">取消</button>
             </div>
         </div>
 

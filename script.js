@@ -861,6 +861,8 @@ let decisionsCache = [];
 let pendingAction = null;
 let remoteSha = null;
 let isSyncing = false;
+let decisionSelectMode = false;
+let decisionSelectedIds = new Set();
 
 // ========== 远程同步操作 ==========
 
@@ -1076,7 +1078,7 @@ function renderDecisions() {
                 : '';
 
             return `
-            <div class="decision-card" data-id="${decision.id}">
+            <div class="decision-card${decisionSelectMode ? ' selectable' : ''}${decisionSelectedIds.has(decision.id) ? ' selected' : ''}" data-id="${decision.id}">
                 <div class="decision-card-header">
                     <h3 class="decision-card-title">${title}</h3>
                     <span class="decision-card-date">${formatDate(decision.createdAt)}</span>
@@ -1084,22 +1086,39 @@ function renderDecisions() {
                 ${reason ? `<div class="decision-card-reason">📝 ${reason}</div>` : ''}
                 ${effect ? `<div class="decision-card-effect">🎯 ${effect}</div>` : ''}
                 ${improvements ? `<div class="decision-card-improvements">${improvements}</div>` : ''}
-                <div class="decision-card-actions">
+                ${decisionSelectMode ? '' : `<div class="decision-card-actions">
                     <button class="decision-card-btn" onclick="event.stopPropagation(); openDecisionDetail(${decision.id})">📋 查看</button>
                     <button class="decision-card-btn" onclick="event.stopPropagation(); addImprovement(${decision.id})">🔄 改进</button>
                     <button class="decision-card-btn" onclick="event.stopPropagation(); editDecision(${decision.id})">✏️ 编辑</button>
                     <button class="decision-card-btn delete" onclick="event.stopPropagation(); deleteDecision(${decision.id})">🗑️ 删除</button>
-                </div>
+                </div>`}
             </div>
         `}).join('');
 
-        // 点击卡片查看详情
-        container.querySelectorAll('.decision-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const id = parseInt(card.dataset.id);
-                openDecisionDetail(id);
+        // 多选模式：点击卡片切换选中状态
+        if (decisionSelectMode) {
+            container.querySelectorAll('.decision-card.selectable').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = parseInt(card.dataset.id);
+                    if (decisionSelectedIds.has(id)) {
+                        decisionSelectedIds.delete(id);
+                        card.classList.remove('selected');
+                    } else {
+                        decisionSelectedIds.add(id);
+                        card.classList.add('selected');
+                    }
+                    updateSelectedCount();
+                });
             });
-        });
+        } else {
+            // 正常模式：点击卡片查看详情
+            container.querySelectorAll('.decision-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = parseInt(card.dataset.id);
+                    openDecisionDetail(id);
+                });
+            });
+        }
     }
 
     // 渲染 About 区域的最近3条决策
@@ -1327,6 +1346,68 @@ function confirmDelete(id) {
     alert('✅ 决策已删除');
 }
 
+// ========== 多选模式 ==========
+
+function toggleSelectMode() {
+    decisionSelectMode = !decisionSelectMode;
+    decisionSelectedIds.clear();
+    const btn = document.getElementById('decisionSelectBtn');
+    const bar = document.getElementById('decisionBatchBar');
+    if (btn) btn.classList.toggle('active', decisionSelectMode);
+    if (bar) bar.classList.toggle('show', decisionSelectMode);
+    const selectAllCb = document.getElementById('decisionSelectAll');
+    if (selectAllCb) selectAllCb.checked = false;
+    renderDecisions();
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const el = document.getElementById('decisionSelectedCount');
+    if (el) el.textContent = `已选 ${decisionSelectedIds.size} 条`;
+    const selectAllCb = document.getElementById('decisionSelectAll');
+    const cards = document.querySelectorAll('.decision-card.selectable');
+    if (selectAllCb && cards.length > 0) {
+        selectAllCb.checked = decisionSelectedIds.size === cards.length && cards.length > 0;
+    }
+}
+
+function toggleSelectAll(checked) {
+    const cards = document.querySelectorAll('.decision-card.selectable');
+    if (checked) {
+        cards.forEach(card => {
+            const id = parseInt(card.dataset.id);
+            decisionSelectedIds.add(id);
+            card.classList.add('selected');
+        });
+    } else {
+        decisionSelectedIds.clear();
+        cards.forEach(card => card.classList.remove('selected'));
+    }
+    updateSelectedCount();
+}
+
+function batchDeleteDecisions() {
+    if (decisionSelectedIds.size === 0) {
+        alert('请先选择要删除的决策');
+        return;
+    }
+    if (!confirm(`确定要删除选中的 ${decisionSelectedIds.size} 条决策吗？此操作不可撤销。`)) return;
+    showPasswordModal({ type: 'batchDelete' });
+}
+
+function confirmBatchDelete() {
+    decisionsCache = decisionsCache.filter(d => !decisionSelectedIds.has(d.id));
+    saveDecisions();
+    decisionSelectMode = false;
+    decisionSelectedIds.clear();
+    const btn = document.getElementById('decisionSelectBtn');
+    const bar = document.getElementById('decisionBatchBar');
+    if (btn) btn.classList.remove('active');
+    if (bar) bar.classList.remove('show');
+    renderDecisions();
+    alert('✅ 批量删除完成');
+}
+
 // ========== 决策事件绑定 ==========
 
 function handleDecisionEvents() {
@@ -1341,6 +1422,16 @@ function handleDecisionEvents() {
 
     // 新增决策按钮
     document.getElementById('decisionAddBtn').addEventListener('click', openAddDecisionForm);
+
+    // 多选模式按钮
+    const selectBtn = document.getElementById('decisionSelectBtn');
+    if (selectBtn) selectBtn.addEventListener('click', toggleSelectMode);
+    const selectAllCb = document.getElementById('decisionSelectAll');
+    if (selectAllCb) selectAllCb.addEventListener('change', (e) => toggleSelectAll(e.target.checked));
+    const batchDeleteBtn = document.getElementById('decisionBatchDelete');
+    if (batchDeleteBtn) batchDeleteBtn.addEventListener('click', batchDeleteDecisions);
+    const batchCancelBtn = document.getElementById('decisionBatchCancel');
+    if (batchCancelBtn) batchCancelBtn.addEventListener('click', toggleSelectMode);
 
     // 表单保存
     document.getElementById('decisionFormSave').addEventListener('click', saveDecisionForm);
@@ -1366,6 +1457,8 @@ function handleDecisionEvents() {
                     openImprovementForm(action.id);
                 } else if (action.type === 'delete') {
                     confirmDelete(action.id);
+                } else if (action.type === 'batchDelete') {
+                    confirmBatchDelete();
                 }
             }
         } else {
