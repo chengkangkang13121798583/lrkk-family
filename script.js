@@ -838,7 +838,7 @@ function handleMessageSubmit() {
 }
 
 // ============================================
-// 决策记录库 - 本地存储
+// 决策记录库 - GitHub API 云端同步
 // ============================================
 
 // 配置
@@ -847,50 +847,153 @@ const DECISION_CONFIG = {
     storageKey: 'lrkk-decisions'
 };
 
+// GitHub 远程同步配置（TOKEN 待填入）
+const REMOTE_CONFIG = {
+    owner: 'chengkangkang13121798583',
+    repo: 'lrkk-family',
+    path: 'decisions.json',
+    branch: 'main',
+    token: 'YOUR_GITHUB_TOKEN_HERE'
+};
+
 // 决策数据缓存
 let decisionsCache = [];
-let pendingAction = null; // { type: 'add' | 'edit' | 'delete', id?: string }
+let pendingAction = null;
+let remoteSha = null;
+let isSyncing = false;
 
-// ========== 本地存储操作 ==========
+// ========== 远程同步操作 ==========
 
-function loadDecisions() {
+function setSyncStatus(text, type) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'sync-status show' + (type ? ' sync-' + type : '');
+    if (type === 'success') {
+        setTimeout(() => { el.className = 'sync-status'; }, 3000);
+    }
+}
+
+async function fetchDecisionsFromRemote() {
+    if (!REMOTE_CONFIG.token || REMOTE_CONFIG.token === 'YOUR_GITHUB_TOKEN_HERE') return null;
     try {
-        // 优先从文件数据加载（通过 git 同步）
+        const res = await fetch(
+            `https://api.github.com/repos/${REMOTE_CONFIG.owner}/${REMOTE_CONFIG.repo}/contents/${REMOTE_CONFIG.path}?ref=${REMOTE_CONFIG.branch}`,
+            { headers: { 'Authorization': `token ${REMOTE_CONFIG.token}` } }
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        remoteSha = data.sha;
+        const content = atob(data.content);
+        return JSON.parse(content);
+    } catch (e) {
+        return null;
+    }
+}
+
+async function pushDecisionsToRemote() {
+    if (!REMOTE_CONFIG.token || REMOTE_CONFIG.token === 'YOUR_GITHUB_TOKEN_HERE') return false;
+    if (isSyncing) return false;
+    isSyncing = true;
+    try {
+        setSyncStatus('同步中...', 'syncing');
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(decisionsCache, null, 4))));
+        const body = {
+            message: 'feat: 同步决策记录 (' + new Date().toLocaleString('zh-CN', {timeZone: 'Asia/Shanghai'}) + ')',
+            content: content,
+            branch: REMOTE_CONFIG.branch
+        };
+        if (remoteSha) body.sha = remoteSha;
+        const res = await fetch(
+            `https://api.github.com/repos/${REMOTE_CONFIG.owner}/${REMOTE_CONFIG.repo}/contents/${REMOTE_CONFIG.path}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `token ${REMOTE_CONFIG.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            }
+        );
+        if (res.ok) {
+            const data = await res.json();
+            remoteSha = data.content.sha;
+            setSyncStatus('✓ 已同步到云端', 'success');
+            return true;
+        } else {
+            const err = await res.json();
+            console.error('GitHub API error:', err);
+            if (err.message && err.message.includes('SHA')) {
+                remoteSha = null;
+                isSyncing = false;
+                return pushDecisionsToRemote();
+            }
+            setSyncStatus('同步失败', 'error');
+            return false;
+        }
+    } catch (e) {
+        console.error('Sync error:', e);
+        setSyncStatus('同步失败', 'error');
+        return false;
+    } finally {
+        isSyncing = false;
+    }
+}
+
+// ========== 存储操作 ==========
+
+async function loadDecisions() {
+    // 1. 先从本地加载（即时显示，不阻塞页面）
+    try {
         if (typeof DECISIONS_DATA !== 'undefined' && DECISIONS_DATA.length > 0) {
             decisionsCache = JSON.parse(JSON.stringify(DECISIONS_DATA));
-            // 检查 localStorage 是否有更新的数据（手机端新增的）
             const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
             if (saved) {
                 const localData = JSON.parse(saved);
-                // 合并：以文件数据为基础，补充 localStorage 中新增的条目
                 const fileIds = new Set(decisionsCache.map(d => d.id));
                 const newItems = localData.filter(d => !fileIds.has(d.id));
                 if (newItems.length > 0) {
                     decisionsCache = [...decisionsCache, ...newItems];
-                    // 将合并后的数据同步回 localStorage
-                    saveDecisions();
+                    saveDecisionsLocal();
                 }
             }
         } else {
-            // 降级：从 localStorage 加载
             const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
-            if (saved) {
-                decisionsCache = JSON.parse(saved);
-            } else {
-                decisionsCache = [];
-            }
+            decisionsCache = saved ? JSON.parse(saved) : [];
         }
         renderDecisions();
-    } catch(e) {
+    } catch (e) {
         decisionsCache = [];
         renderDecisions();
     }
+
+    // 2. 后台从 GitHub 拉取最新数据（静默同步）
+    try {
+        const remoteData = await fetchDecisionsFromRemote();
+        if (remoteData && remoteData.length > 0) {
+            const remoteIds = new Set(remoteData.map(d => d.id));
+            const localOnly = decisionsCache.filter(d => !remoteIds.has(d.id));
+            const merged = [...remoteData, ...localOnly];
+            merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            if (JSON.stringify(merged) !== JSON.stringify(decisionsCache)) {
+                decisionsCache = merged;
+                saveDecisionsLocal();
+                renderDecisions();
+                setSyncStatus('✓ 已同步最新数据', 'success');
+            }
+        }
+    } catch (e) {}
+}
+
+function saveDecisionsLocal() {
+    try {
+        localStorage.setItem(DECISION_CONFIG.storageKey, JSON.stringify(decisionsCache));
+    } catch (e) {}
 }
 
 function saveDecisions() {
-    try {
-        localStorage.setItem(DECISION_CONFIG.storageKey, JSON.stringify(decisionsCache));
-    } catch(e) {}
+    saveDecisionsLocal();
+    pushDecisionsToRemote();
 }
 
 // ========== 密码验证 ==========

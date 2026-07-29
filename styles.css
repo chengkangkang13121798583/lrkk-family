@@ -2192,3 +2192,37 @@ a {
 /* ========== 字体大小切换 ========== */
 .font-sm { font-size: 0.9rem; }
 .font-lg { font-size: 1.1rem; }
+
+/* ========== 云端同步状态 ========== */
+.sync-status {
+    font-size: 0.72rem;
+    font-family: var(--font-sans);
+    color: var(--text-muted);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.sync-status.show {
+    opacity: 1;
+}
+
+.sync-status.sync-syncing {
+    color: var(--text-secondary);
+}
+
+.sync-status.sync-success {
+    color: #2e7d32;
+}
+
+[data-theme="dark"] .sync-status.sync-success {
+    color: #66bb6a;
+}
+
+.sync-status.sync-error {
+    color: #8b0000;
+}
+
+[data-theme="dark"] .sync-status.sync-error {
+    color: #ef5350;
+}

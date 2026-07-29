@@ -161,7 +161,10 @@
     <div class="section-inner">
         <div class="section-top">
             <div class="section-label">§ 03 · DECISIONS</div>
-            <button class="decision-add-btn" id="decisionAddBtn">+ 新增</button>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="sync-status" id="syncStatus"></span>
+                <button class="decision-add-btn" id="decisionAddBtn">+ 新增</button>
+            </div>
         </div>
         <h2 class="section-heading"><em>Decisions</em> — <span id="decisionCount">共 0 条决策</span></h2>
         <div class="decisions-timeline" id="decisionsContainer">
