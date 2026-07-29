@@ -884,7 +884,7 @@ async function fetchDecisionsFromRemote() {
         if (!res.ok) return null;
         const data = await res.json();
         remoteSha = data.sha;
-        const content = atob(data.content);
+        const content = decodeURIComponent(escape(atob(data.content)));
         return JSON.parse(content);
     } catch (e) {
         return null;
