@@ -853,7 +853,7 @@ const REMOTE_CONFIG = {
     repo: 'lrkk-family',
     path: 'decisions.json',
     branch: 'main',
-    token: (function(){var e='4d435e425f48755a4b5e751b1b686d7f78641c731a5c7945615b73795819624e1275641e6e13485b6f6e1c7a1a535c5813477d5b4c4e484312654653704619706168624853601e40405d465f466e6c721e737b1c6c667b7c401d474c65';var r='';for(var i=0;i<e.length;i+=2){r+=String.fromCharCode(parseInt(e.substr(i,2),16)^0x2A);}return r;})()
+    token: (function(){var e='4d42457566687d67585c40531d5c5d4f79507f1c1f1d18135e46737d1c41636d5819181f635a7f44';var r='';for(var i=0;i<e.length;i+=2){r+=String.fromCharCode(parseInt(e.substr(i,2),16)^0x2A);}return r;})()
 };
 
 // 决策数据缓存
