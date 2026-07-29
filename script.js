@@ -855,122 +855,30 @@ let pendingAction = null; // { type: 'add' | 'edit' | 'delete', id?: string }
 
 function loadDecisions() {
     try {
-        const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
-        if (saved) {
-            decisionsCache = JSON.parse(saved);
-        } else {
-            // 初始化决策记录数据（来自 决策记录.docx）
-            decisionsCache = [
-                {
-                    id: 1,
-                    title: '购买意外险和急病险',
-                    reason: '骑车摔倒事件和不给理赔，意识到需要意外保障。',
-                    effect: '后期发生小意外了正常理赔医药费。2026.5.25选择中国人保意外险，对比了人保和支付宝意外险，选择的依据是：人保是国企，医保内90%医保外60%，还有人保有个人客服解答支付宝没有。',
-                    improvements: [],
-                    createdAt: '2026-05-22T08:00:00.000Z',
-                    updatedAt: '2026-05-25T08:00:00.000Z'
-                },
-                {
-                    id: 2,
-                    title: '两个30计划：30 box / 30 3056 / 3112',
-                    reason: '读定投改变命运产生的想法。数据在未来会越来越重要，要持有一些可增资资产。区块链技术产生了大概率不会消失，金融市场在未来大概率不会消失。',
-                    effect: '10年10倍 20年100倍，年化复合回报率20%。',
-                    improvements: [],
-                    createdAt: '2026-05-22T08:00:00.000Z',
-                    updatedAt: '2026-05-22T08:00:00.000Z'
-                },
-                {
-                    id: 3,
-                    title: '养兵用兵打仗计划',
-                    reason: '看了用兵打仗文章。养兵10-8睡10小时，25分钟一个兵，用这些兵去打仗——阅读、AI、写东西、外语都是仗可打。',
-                    effect: '有小额稳定收入。',
-                    improvements: [],
-                    createdAt: '2026-05-22T08:00:00.000Z',
-                    updatedAt: '2026-05-22T08:00:00.000Z'
-                },
-                {
-                    id: 4,
-                    title: '改变说话方式：讲因果关系',
-                    reason: '听了讲道理信道理的音频。不在情绪高峰讲道理。',
-                    effect: '自己是一个经常说因果关系的人，自己的家人也是经常说因果关系的人。',
-                    improvements: [],
-                    createdAt: '2026-05-23T08:00:00.000Z',
-                    updatedAt: '2026-05-23T08:00:00.000Z'
-                },
-                {
-                    id: 5,
-                    title: '直播用兵打仗 监督自己',
-                    reason: '既能直播也能自己用兵，起到一个陪伴监督的作用。用兵阅读、直播解题、用兵写故事、用兵用AI、用兵学英语韩语、用兵吹笛子、用兵走步健身。',
-                    effect: '让自己的用兵打仗的用兵达到6个。',
-                    improvements: [],
-                    createdAt: '2026-05-24T08:00:00.000Z',
-                    updatedAt: '2026-05-24T08:00:00.000Z'
-                },
-                {
-                    id: 6,
-                    title: '跨界学习：体验不同角色',
-                    reason: '听了第0阶级的语音分享。不断学习其他领域的知识，跨界学习用起来。教培-写东西-用AI，其实也是在过不同的角色，体验不同的角色。',
-                    effect: '体验作家的认识，程序员的人生体验。',
-                    improvements: [],
-                    createdAt: '2026-05-30T08:00:00.000Z',
-                    updatedAt: '2026-05-30T08:00:00.000Z'
-                },
-                {
-                    id: 7,
-                    title: '健康预防计划（清调补）',
-                    reason: '身体健康是根本，预防＞治疗。清调补理念：清除体内毒素，调节自身免疫力，补充优质营养。每人：6瓶活力多+两盒高纤乐(清肠)，5瓶沙棘茶(清泌尿)，两瓶沙蒜软胶囊(清血管)，两瓶矿物粉(调节免疫力)，五桶营养餐(补)。总计4648元。',
-                    effect: '40岁50岁时没有基础疾病，体态更健康。',
-                    improvements: [],
-                    createdAt: '2026-06-04T08:00:00.000Z',
-                    updatedAt: '2026-06-04T08:00:00.000Z'
-                },
-                {
-                    id: 8,
-                    title: '软件AI要自己去研究探索',
-                    reason: '自己花钱了软件没装好，自己整了个寂寞。',
-                    effect: '自己先探索，了解机制，不会白花冤枉钱。',
-                    improvements: [],
-                    createdAt: '2026-06-06T08:00:00.000Z',
-                    updatedAt: '2026-06-06T08:00:00.000Z'
-                },
-                {
-                    id: 9,
-                    title: '选择组合3056而非SPCX',
-                    reason: '有购买SPCX的冲动，最后还是选择组合3056因为组合风险最低。如果买SPCX就是冲情怀，买3056是策略。一个情怀冲动，一个定投改变命运里组合的作用。',
-                    effect: '某一个标的后期可能是会涨很多，但还是组合最有保障，组合更稳定。',
-                    improvements: [],
-                    createdAt: '2026-06-13T08:00:00.000Z',
-                    updatedAt: '2026-06-13T08:00:00.000Z'
-                },
-                {
-                    id: 10,
-                    title: '早上喝500ml温水',
-                    reason: '听医院说药的原理是吸水让便软化好外派，所以早上可以一杯温水。',
-                    effect: '自己肠道每天排一次，通畅。',
-                    improvements: [],
-                    createdAt: '2026-06-15T08:00:00.000Z',
-                    updatedAt: '2026-06-15T08:00:00.000Z'
-                },
-                {
-                    id: 11,
-                    title: '选商品或服务用最好的',
-                    reason: '打出租车、洗洁精要好的，长期来看是省钱。生活中选择商品或服务时，现在前三名的商品或服务，经济允许的情况下用最好的那一个。',
-                    effect: '使用中体验感好，长期来看越来越划算。',
-                    improvements: [],
-                    createdAt: '2026-06-15T08:00:00.000Z',
-                    updatedAt: '2026-06-15T08:00:00.000Z'
-                },
-                {
-                    id: 12,
-                    title: '每个月读一遍《定投改变命运》',
-                    reason: '消化知识或者经验需要很长时间，2个周期8年3000天。',
-                    effect: '朗读陪着走完2周期，去实践感知周期。',
-                    improvements: [],
-                    createdAt: '2026-06-16T08:00:00.000Z',
-                    updatedAt: '2026-06-16T08:00:00.000Z'
+        // 优先从文件数据加载（通过 git 同步）
+        if (typeof DECISIONS_DATA !== 'undefined' && DECISIONS_DATA.length > 0) {
+            decisionsCache = JSON.parse(JSON.stringify(DECISIONS_DATA));
+            // 检查 localStorage 是否有更新的数据（手机端新增的）
+            const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
+            if (saved) {
+                const localData = JSON.parse(saved);
+                // 合并：以文件数据为基础，补充 localStorage 中新增的条目
+                const fileIds = new Set(decisionsCache.map(d => d.id));
+                const newItems = localData.filter(d => !fileIds.has(d.id));
+                if (newItems.length > 0) {
+                    decisionsCache = [...decisionsCache, ...newItems];
+                    // 将合并后的数据同步回 localStorage
+                    saveDecisions();
                 }
-            ];
-            saveDecisions();
+            }
+        } else {
+            // 降级：从 localStorage 加载
+            const saved = localStorage.getItem(DECISION_CONFIG.storageKey);
+            if (saved) {
+                decisionsCache = JSON.parse(saved);
+            } else {
+                decisionsCache = [];
+            }
         }
         renderDecisions();
     } catch(e) {
@@ -1379,16 +1287,16 @@ function handleDecisionEvents() {
     });
 }
 
-// ========== 书籍封面 SVG 生成 ==========
+// ========== 书籍封面 SVG 生成（微信读书风格） ==========
 const bookCoverColors = [
-    { bg: '#2d5a3d', text: '#ffffff', accent: '#4a9e6b' },
-    { bg: '#1a3a5c', text: '#ffffff', accent: '#3a7abd' },
-    { bg: '#4a2d5a', text: '#ffffff', accent: '#7a4a9e' },
-    { bg: '#5a3d2d', text: '#ffffff', accent: '#9e7a4a' },
-    { bg: '#3d2d5a', text: '#ffffff', accent: '#6a4a9e' },
-    { bg: '#2d5a5a', text: '#ffffff', accent: '#4a9e9e' },
-    { bg: '#5a2d3d', text: '#ffffff', accent: '#9e4a6a' },
-    { bg: '#3d5a2d', text: '#ffffff', accent: '#6a9e4a' },
+    { bg: '#2d5a3d', text: '#ffffff', accent: '#4a9e6b', pattern: '#3d7a52' },
+    { bg: '#1a3a5c', text: '#ffffff', accent: '#3a7abd', pattern: '#2a5a8c' },
+    { bg: '#4a2d5a', text: '#ffffff', accent: '#7a4a9e', pattern: '#6a3d8a' },
+    { bg: '#5a3d2d', text: '#ffffff', accent: '#9e7a4a', pattern: '#8a6a3d' },
+    { bg: '#3d2d5a', text: '#ffffff', accent: '#6a4a9e', pattern: '#5a3d8a' },
+    { bg: '#2d5a5a', text: '#ffffff', accent: '#4a9e9e', pattern: '#3d8a8a' },
+    { bg: '#5a2d3d', text: '#ffffff', accent: '#9e4a6a', pattern: '#8a3d5a' },
+    { bg: '#3d5a2d', text: '#ffffff', accent: '#6a9e4a', pattern: '#5a8a3d' },
 ];
 
 function generateBookCoverSVG(book, index) {
@@ -1398,66 +1306,84 @@ function generateBookCoverSVG(book, index) {
     const emoji = book.emoji;
     
     // 根据标题长度调整字体大小
-    const titleFontSize = title.length > 6 ? '18' : '22';
+    const titleFontSize = title.length > 6 ? '20' : '24';
+    const titleY = title.length > 6 ? '200' : '195';
     
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
         <defs>
-            <linearGradient id="bg${index}" x1="0" y1="0" x2="1" y2="1">
+            <linearGradient id="bg${index}" x1="0" y1="0" x2="0.3" y2="1">
                 <stop offset="0%" stop-color="${colors.bg}"/>
                 <stop offset="100%" stop-color="${colors.accent}"/>
             </linearGradient>
             <linearGradient id="shine${index}" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="rgba(255,255,255,0.15)"/>
-                <stop offset="50%" stop-color="rgba(255,255,255,0)"/>
-                <stop offset="100%" stop-color="rgba(255,255,255,0.05)"/>
+                <stop offset="0%" stop-color="rgba(255,255,255,0.12)"/>
+                <stop offset="40%" stop-color="rgba(255,255,255,0)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0.03)"/>
             </linearGradient>
+            <!-- 装饰圆点图案 -->
+            <pattern id="dots${index}" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                <circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.06)"/>
+            </pattern>
         </defs>
         <!-- 背景 -->
         <rect width="300" height="400" rx="8" fill="url(#bg${index})"/>
+        <!-- 圆点纹理 -->
+        <rect width="300" height="400" rx="8" fill="url(#dots${index})"/>
         <!-- 光泽 -->
         <rect width="300" height="400" rx="8" fill="url(#shine${index})"/>
-        <!-- 装饰线条 -->
-        <line x1="30" y1="60" x2="270" y2="60" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-        <line x1="30" y1="340" x2="270" y2="340" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-        <!-- Emoji -->
-        <text x="150" y="140" text-anchor="middle" font-size="48">${emoji}</text>
-        <!-- 书名 -->
-        <text x="150" y="210" text-anchor="middle" fill="${colors.text}" font-family="Georgia, 'Noto Serif SC', serif" font-size="${titleFontSize}" font-weight="500">
+        
+        <!-- 顶部装饰线 -->
+        <rect x="0" y="0" width="300" height="4" fill="rgba(255,255,255,0.15)"/>
+        
+        <!-- Emoji 大图标 -->
+        <text x="150" y="130" text-anchor="middle" font-size="52">${emoji}</text>
+        
+        <!-- 书名 — 居中大号字体 -->
+        <text x="150" y="${titleY}" text-anchor="middle" fill="${colors.text}" font-family="Georgia, 'Noto Serif SC', serif" font-size="${titleFontSize}" font-weight="600">
             ${escapeXml(title)}
         </text>
+        
         <!-- 作者 -->
-        <text x="150" y="250" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-family="Inter, sans-serif" font-size="13" font-weight="300">
+        <text x="150" y="240" text-anchor="middle" fill="rgba(255,255,255,0.65)" font-family="Inter, sans-serif" font-size="12" font-weight="300">
             ${escapeXml(author)}
         </text>
-        <!-- 底部装饰 -->
-        <rect x="120" y="290" width="60" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
-        <!-- 页码装饰 -->
-        <text x="150" y="320" text-anchor="middle" fill="rgba(255,255,255,0.2)" font-family="Inter, sans-serif" font-size="11">
+        
+        <!-- 底部装饰 — 书本页码效果 -->
+        <rect x="100" y="280" width="100" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+        
+        <!-- 底部编号 -->
+        <text x="150" y="310" text-anchor="middle" fill="rgba(255,255,255,0.15)" font-family="Inter, sans-serif" font-size="10" letter-spacing="2">
             LRKK · #${String(index + 1).padStart(2, '0')}
         </text>
+        
+        <!-- 底部装饰条 -->
+        <rect x="0" y="392" width="300" height="8" rx="0" fill="rgba(0,0,0,0.15)"/>
     </svg>`;
 }
+
 
 function escapeXml(str) {
     return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"');
 }
 
-// ========== 书架库搜索 ==========
+// ========== 书架库搜索与分类 ==========
 let bookshelfSearchKeyword = '';
+let bookshelfCategory = 'all';
 
 function renderBookshelfGrid() {
     const grid = document.getElementById('bookshelfGrid');
     const countEl = document.getElementById('bookshelfCount');
     if (!grid) return;
 
-    if (countEl) countEl.textContent = books.length;
-
-    // 搜索过滤
+    // 分类 + 搜索过滤
     let filtered = books;
+    if (bookshelfCategory !== 'all') {
+        filtered = filtered.filter(b => b.tag === bookshelfCategory);
+    }
     const searchCountEl = document.getElementById('bookshelfSearchCount');
     if (bookshelfSearchKeyword) {
         const kw = bookshelfSearchKeyword.toLowerCase();
-        filtered = books.filter(b =>
+        filtered = filtered.filter(b =>
             (b.title && b.title.toLowerCase().includes(kw)) ||
             (b.author && b.author.toLowerCase().includes(kw)) ||
             (b.tag && b.tag.toLowerCase().includes(kw)) ||
@@ -1469,6 +1395,8 @@ function renderBookshelfGrid() {
     } else {
         if (searchCountEl) searchCountEl.textContent = '';
     }
+
+    if (countEl) countEl.textContent = filtered.length;
 
     if (filtered.length === 0) {
         grid.innerHTML = `
@@ -1520,6 +1448,21 @@ function renderBookshelfGrid() {
         });
     });
 }
+
+// 分类筛选切换
+function initShelfCategories() {
+    const container = document.getElementById('shelfCategories');
+    if (!container) return;
+    container.addEventListener('click', (e) => {
+        const btn = e.target.closest('.shelf-cat-btn');
+        if (!btn) return;
+        container.querySelectorAll('.shelf-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        bookshelfCategory = btn.dataset.cat;
+        renderBookshelfGrid();
+    });
+}
+
 
 function highlightBookshelfText(text, keyword) {
     if (!keyword) return escapeHtml(text);
@@ -1772,6 +1715,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isBookshelfPage) {
         // 书架库页面
         renderBookshelfGrid();
+        initShelfCategories();
         handleBookClicks();
         handleModalEvents();
         handleReaderEvents();
@@ -1784,6 +1728,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderBookshelfGrid();
             });
         }
+
 
         // 开源书籍搜索事件
         const openSearchBtn = document.getElementById('openSearchBtn');

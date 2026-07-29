@@ -55,10 +55,48 @@
             color: var(--accent);
         }
 
+
+        /* 分类筛选栏（微信读书风格） */
+        .shelf-categories {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding-bottom: 4px;
+        }
+        .shelf-categories::-webkit-scrollbar {
+            display: none;
+        }
+        .shelf-cat-btn {
+            padding: 7px 18px;
+            border: none;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-family: var(--font-sans);
+            color: var(--text-secondary);
+            background: var(--bg-alt);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .shelf-cat-btn:hover {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        .shelf-cat-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
         /* 搜索框 */
         .bookshelf-search-wrap {
             margin-bottom: 24px;
         }
+
 
         .bookshelf-search-input {
             width: 100%;
@@ -116,32 +154,33 @@
             color: #fff;
         }
 
-        /* 书籍卡片网格 */
+        /* ========== 微信读书风格书架 ========== */
         .bookshelf-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
         }
 
         .bookshelf-grid .book-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             box-shadow: var(--card-shadow);
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            position: relative;
         }
 
         .bookshelf-grid .book-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
             border-color: var(--accent);
         }
 
-        /* 书籍封面区域 */
+        /* 书籍封面区域 — 微信读书风格大封面 */
         .bookshelf-grid .book-card-cover {
             width: 100%;
             aspect-ratio: 3/4;
@@ -151,6 +190,7 @@
             position: relative;
             overflow: hidden;
             flex-shrink: 0;
+            border-radius: 16px 16px 0 0;
         }
 
         .bookshelf-grid .book-card-cover svg {
@@ -159,60 +199,91 @@
             display: block;
         }
 
+        /* 封面上的进度浮标 */
+        .bookshelf-grid .book-card-cover .cover-progress-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            color: #fff;
+            font-size: 0.65rem;
+            font-family: var(--font-sans);
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* 书籍信息区域 — 更简洁 */
         .bookshelf-grid .book-card-body {
-            padding: 16px 20px 20px;
+            padding: 14px 16px 16px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             flex: 1;
         }
 
         .bookshelf-grid .book-card-title {
             font-family: var(--font-serif);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             color: var(--text);
-            line-height: 1.3;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .bookshelf-grid .book-card-author {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             font-family: var(--font-sans);
+            margin-bottom: 2px;
         }
 
         .bookshelf-grid .book-card-tag {
             display: inline-block;
-            padding: 2px 10px;
+            padding: 2px 8px;
             background: var(--accent-light);
             color: var(--accent);
             border-radius: 100px;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-family: var(--font-sans);
             align-self: flex-start;
+            font-weight: 500;
         }
 
         .bookshelf-grid .book-card-desc {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
             flex: 1;
+            margin-top: 4px;
         }
 
+        /* 进度条 — 微信读书风格细条 */
         .bookshelf-grid .book-card-progress {
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             color: var(--text-muted);
             font-family: var(--font-sans);
             padding-top: 8px;
-            border-top: 1px solid var(--border);
             margin-top: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .bookshelf-grid .book-card-progress-bar {
-            height: 3px;
+            flex: 1;
+            height: 2px;
             background: var(--border);
             border-radius: 2px;
-            margin-top: 6px;
             overflow: hidden;
         }
 
@@ -235,6 +306,33 @@
             display: block;
             margin-bottom: 12px;
         }
+
+        @media (max-width: 1100px) {
+            .bookshelf-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 800px) {
+            .bookshelf-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .bookshelf-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .bookshelf-grid .book-card-body {
+                padding: 10px 12px 12px;
+            }
+            .bookshelf-grid .book-card-title {
+                font-size: 0.85rem;
+            }
+        }
+
 
         /* ========== 搜索开源书籍区域 ========== */
         .open-search-section {
@@ -543,10 +641,21 @@
         <h2 class="section-heading" style="margin-bottom:0;"><em>书架库</em></h2>
         <p class="bookshelf-page-subtitle">共 <span id="bookshelfCount">0</span> 本书 · 持续阅读中</p>
 
+
+        <!-- 分类筛选栏（微信读书风格） -->
+        <div class="shelf-categories" id="shelfCategories">
+            <button class="shelf-cat-btn active" data-cat="all">全部</button>
+            <button class="shelf-cat-btn" data-cat="开源书籍">📖 开源书籍</button>
+            <button class="shelf-cat-btn" data-cat="经典必读">📚 经典必读</button>
+            <button class="shelf-cat-btn" data-cat="投资经典">💎 投资经典</button>
+            <button class="shelf-cat-btn" data-cat="思维方法">🧠 思维方法</button>
+            <button class="shelf-cat-btn" data-cat="个人成长">🌱 个人成长</button>
+        </div>
+
         <div class="bookshelf-search-wrap">
             <div class="bookshelf-search-relative">
                 <span class="bookshelf-search-icon">🔍</span>
-                <input type="text" class="bookshelf-search-input" id="bookshelfSearchInput" placeholder="搜索书名、作者、标签..." autocomplete="off">
+                <input type="text" class="bookshelf-search-input" id="bookshelfSearchInput" placeholder="搜索书名、作者..." autocomplete="off">
             </div>
             <div class="bookshelf-search-count" id="bookshelfSearchCount"></div>
         </div>
@@ -554,6 +663,7 @@
         <div class="bookshelf-grid" id="bookshelfGrid">
             <!-- 由 JS 动态生成 -->
         </div>
+
 
         <!-- ========== 搜索开源书籍区域 ========== -->
         <div class="open-search-section">
